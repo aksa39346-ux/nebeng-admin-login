@@ -29,7 +29,7 @@ const mainMenuItems: MenuItem[] = [
     icon: ShieldCheck,
     children: [
       { title: "Verifikasi Mitra", path: "/dashboard/verifikasi-mitra" },
-      { title: "Verifikasi Dokumen", path: "/dashboard/verifikasi-dokumen" },
+      { title: "Verifikasi Costumer", path: "/dashboard/verifikasi-costumer" },
     ],
   },
   {
@@ -60,7 +60,19 @@ const supportMenuItems: MenuItem[] = [
 const DashboardSidebar = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [expandedMenus, setExpandedMenus] = useState<string[]>([]);
+  
+  // Auto-expand menus that have active children
+  const getInitialExpandedMenus = () => {
+    const expanded: string[] = [];
+    [...mainMenuItems, ...supportMenuItems].forEach((item) => {
+      if (item.children?.some((child) => location.pathname === child.path)) {
+        expanded.push(item.title);
+      }
+    });
+    return expanded;
+  };
+
+  const [expandedMenus, setExpandedMenus] = useState<string[]>(getInitialExpandedMenus);
 
   const toggleMenu = (title: string) => {
     setExpandedMenus((prev) =>

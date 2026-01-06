@@ -17,6 +17,8 @@ import { useState } from "react";
 
 interface DashboardHeaderProps {
   userName?: string;
+  pageTitle?: string;
+  showWelcome?: boolean;
 }
 
 // Notification data
@@ -63,15 +65,15 @@ const notifications = [
   },
 ];
 
-const DashboardHeader = ({ userName = "Admin" }: DashboardHeaderProps) => {
+const DashboardHeader = ({ userName = "Admin", pageTitle = "Dashboard", showWelcome = false }: DashboardHeaderProps) => {
   const navigate = useNavigate();
   const [notifOpen, setNotifOpen] = useState(false);
 
   return (
     <header className="h-16 bg-background border-b flex items-center justify-between px-6">
-      {/* Welcome Message */}
+      {/* Page Title */}
       <h1 className="text-xl font-semibold text-foreground">
-        Selamat Datang, {userName} 👋
+        {showWelcome ? `Selamat Datang, ${userName} 👋` : pageTitle}
       </h1>
 
       {/* Right Section */}
