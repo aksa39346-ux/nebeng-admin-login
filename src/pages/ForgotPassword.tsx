@@ -4,8 +4,6 @@ import { Input } from "@/components/ui/input";
 import { ArrowLeft, Lock, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import ConfirmationPopup from "@/components/ConfirmationPopup";
-import { forgotPassword } from "@/services/api";
-import { toast } from "sonner";
 import { forgotPasswordSchema } from "@/lib/validations";
 import FormError from "@/components/FormError";
 
@@ -32,16 +30,11 @@ const ForgotPassword = () => {
     }
 
     setIsLoading(true);
-
-    const { error } = await forgotPassword({ email });
-
+    
+    // Simulate API delay
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    
     setIsLoading(false);
-
-    if (error) {
-      toast.error(error);
-      return;
-    }
-
     setShowPopup(true);
   };
 
