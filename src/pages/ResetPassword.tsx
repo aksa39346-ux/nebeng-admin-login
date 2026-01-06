@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Lock, Eye, EyeOff } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { ArrowLeft, Lock, Eye, EyeOff, Loader2 } from "lucide-react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import ConfirmationPopup from "@/components/ConfirmationPopup";
+import { resetPassword } from "@/services/api";
+import { toast } from "sonner";
 
 const ResetPassword = () => {
   const [newPassword, setNewPassword] = useState("");
@@ -11,15 +13,43 @@ const ResetPassword = () => {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Token dan email dari URL (Laravel kirim via email link)
+  const token = searchParams.get("token") || "";
+  const email = searchParams.get("email") || "";
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
     if (newPassword !== confirmPassword) {
-      console.log("Passwords do not match");
+      toast.error("Password tidak cocok");
       return;
     }
-    console.log("Password reset submitted");
+
+    if (newPassword.length < 8) {
+      toast.error("Password minimal 8 karakter");
+      return;
+    }
+
+    setIsLoading(true);
+
+    const { error } = await resetPassword({
+      token,
+      email,
+      password: newPassword,
+      password_confirmation: confirmPassword,
+    });
+
+    setIsLoading(false);
+
+    if (error) {
+      toast.error(error);
+      return;
+    }
+
     setShowPopup(true);
   };
 
@@ -112,9 +142,10 @@ const ResetPassword = () => {
 
               <Button
                 type="submit"
+                disabled={isLoading}
                 className="w-full h-12 bg-primary hover:bg-primary/90 text-primary-foreground font-medium"
               >
-                Simpan
+                {isLoading ? <Loader2 className="animate-spin" size={20} /> : "Simpan"}
               </Button>
             </form>
           </div>

@@ -1,18 +1,38 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { login } from "@/services/api";
+import { toast } from "sonner";
 
 const Index = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Login attempt:", { email, rememberMe });
+    setIsLoading(true);
+
+    const { data, error } = await login({ email, password, remember: rememberMe });
+
+    setIsLoading(false);
+
+    if (error) {
+      toast.error(error);
+      return;
+    }
+
+    if (data?.token) {
+      localStorage.setItem("auth_token", data.token);
+      toast.success("Login berhasil!");
+      navigate("/dashboard"); // Ganti dengan route dashboard kamu
+    }
   };
 
   return (
@@ -157,9 +177,10 @@ const Index = () => {
             {/* Login Button */}
             <Button
               type="submit"
+              disabled={isLoading}
               className="w-auto px-8 h-11 bg-primary hover:bg-primary/90 text-primary-foreground font-medium"
             >
-              Log In
+              {isLoading ? <Loader2 className="animate-spin" size={20} /> : "Log In"}
             </Button>
           </form>
         </div>
