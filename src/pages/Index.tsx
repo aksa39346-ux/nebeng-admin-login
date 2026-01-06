@@ -147,7 +147,7 @@ const Index = () => {
                 </label>
               </div>
               <a
-                href="#"
+                href="/forgot-password"
                 className="text-sm text-primary hover:text-primary/80 transition-colors"
               >
                 Lupa Password?
