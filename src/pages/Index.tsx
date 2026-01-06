@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
-import { login } from "@/services/api";
 import { toast } from "sonner";
 import { loginSchema } from "@/lib/validations";
 import FormError from "@/components/FormError";
@@ -35,21 +34,13 @@ const Index = () => {
     }
 
     setIsLoading(true);
-
-    const { data, error } = await login({ email, password, remember: rememberMe });
-
+    
+    // Simulate login delay
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    
     setIsLoading(false);
-
-    if (error) {
-      toast.error(error);
-      return;
-    }
-
-    if (data?.token) {
-      localStorage.setItem("auth_token", data.token);
-      toast.success("Login berhasil!");
-      navigate("/dashboard");
-    }
+    toast.success("Login berhasil!");
+    navigate("/dashboard");
   };
 
   return (

@@ -2,10 +2,8 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowLeft, Lock, Eye, EyeOff, Loader2 } from "lucide-react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import ConfirmationPopup from "@/components/ConfirmationPopup";
-import { resetPassword } from "@/services/api";
-import { toast } from "sonner";
 import { resetPasswordSchema } from "@/lib/validations";
 import FormError from "@/components/FormError";
 
@@ -18,10 +16,6 @@ const ResetPassword = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<{ newPassword?: string; confirmPassword?: string }>({});
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-
-  const token = searchParams.get("token") || "";
-  const email = searchParams.get("email") || "";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,21 +34,11 @@ const ResetPassword = () => {
     }
 
     setIsLoading(true);
-
-    const { error } = await resetPassword({
-      token,
-      email,
-      password: newPassword,
-      password_confirmation: confirmPassword,
-    });
-
+    
+    // Simulate API delay
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    
     setIsLoading(false);
-
-    if (error) {
-      toast.error(error);
-      return;
-    }
-
     setShowPopup(true);
   };
 
