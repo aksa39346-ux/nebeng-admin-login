@@ -13,6 +13,9 @@ export default {
       },
     },
     extend: {
+      fontFamily: {
+        sans: ['Inter', 'sans-serif'],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -57,6 +60,14 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        nebeng: {
+          navy: "hsl(var(--nebeng-navy))",
+          "navy-light": "hsl(var(--nebeng-navy-light))",
+          blue: "hsl(var(--nebeng-blue))",
+        },
+      },
+      backgroundImage: {
+        'nebeng-gradient': 'var(--nebeng-gradient)',
       },
       borderRadius: {
         lg: "var(--radius)",
