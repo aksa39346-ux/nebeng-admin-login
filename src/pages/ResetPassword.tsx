@@ -3,12 +3,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowLeft, Lock, Eye, EyeOff } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import ConfirmationPopup from "@/components/ConfirmationPopup";
 
 const ResetPassword = () => {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showPopup, setShowPopup] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -18,7 +20,14 @@ const ResetPassword = () => {
       return;
     }
     console.log("Password reset submitted");
-    navigate("/");
+    setShowPopup(true);
+  };
+
+  const handlePopupClose = (open: boolean) => {
+    setShowPopup(open);
+    if (!open) {
+      navigate("/");
+    }
   };
 
   return (
@@ -111,6 +120,13 @@ const ResetPassword = () => {
           </div>
         </div>
       </div>
+
+      {/* Confirmation Popup */}
+      <ConfirmationPopup
+        open={showPopup}
+        onOpenChange={handlePopupClose}
+        type="password-changed"
+      />
     </div>
   );
 };

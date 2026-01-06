@@ -3,16 +3,24 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowLeft, Lock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import ConfirmationPopup from "@/components/ConfirmationPopup";
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
+  const [showPopup, setShowPopup] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     console.log("Password reset requested for:", email);
-    // Navigate to reset password page after submission
-    navigate("/reset-password");
+    setShowPopup(true);
+  };
+
+  const handlePopupClose = (open: boolean) => {
+    setShowPopup(open);
+    if (!open) {
+      navigate("/reset-password");
+    }
   };
 
   return (
@@ -71,6 +79,14 @@ const ForgotPassword = () => {
           </div>
         </div>
       </div>
+
+      {/* Confirmation Popup */}
+      <ConfirmationPopup
+        open={showPopup}
+        onOpenChange={handlePopupClose}
+        type="email-sent"
+        email={email}
+      />
     </div>
   );
 };
