@@ -6,15 +6,31 @@ import { useNavigate } from "react-router-dom";
 import ConfirmationPopup from "@/components/ConfirmationPopup";
 import { forgotPassword } from "@/services/api";
 import { toast } from "sonner";
+import { forgotPasswordSchema } from "@/lib/validations";
+import FormError from "@/components/FormError";
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
   const [showPopup, setShowPopup] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [errors, setErrors] = useState<{ email?: string }>({});
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrors({});
+
+    // Validate form
+    const result = forgotPasswordSchema.safeParse({ email });
+    if (!result.success) {
+      const fieldErrors: { email?: string } = {};
+      result.error.errors.forEach((err) => {
+        if (err.path[0] === "email") fieldErrors.email = err.message;
+      });
+      setErrors(fieldErrors);
+      return;
+    }
+
     setIsLoading(true);
 
     const { error } = await forgotPassword({ email });
@@ -78,8 +94,9 @@ const ForgotPassword = () => {
                   placeholder="Masukan Email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="h-12 border-border bg-background placeholder:text-muted-foreground/60"
+                  className={`h-12 border-border bg-background placeholder:text-muted-foreground/60 ${errors.email ? "border-destructive" : ""}`}
                 />
+                <FormError message={errors.email} />
               </div>
 
               <Button

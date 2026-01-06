@@ -6,6 +6,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { login } from "@/services/api";
 import { toast } from "sonner";
+import { loginSchema } from "@/lib/validations";
+import FormError from "@/components/FormError";
 
 const Index = () => {
   const [email, setEmail] = useState("");
@@ -13,10 +15,25 @@ const Index = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrors({});
+
+    // Validate form
+    const result = loginSchema.safeParse({ email, password });
+    if (!result.success) {
+      const fieldErrors: { email?: string; password?: string } = {};
+      result.error.errors.forEach((err) => {
+        if (err.path[0] === "email") fieldErrors.email = err.message;
+        if (err.path[0] === "password") fieldErrors.password = err.message;
+      });
+      setErrors(fieldErrors);
+      return;
+    }
+
     setIsLoading(true);
 
     const { data, error } = await login({ email, password, remember: rememberMe });
@@ -31,7 +48,7 @@ const Index = () => {
     if (data?.token) {
       localStorage.setItem("auth_token", data.token);
       toast.success("Login berhasil!");
-      navigate("/dashboard"); // Ganti dengan route dashboard kamu
+      navigate("/dashboard");
     }
   };
 
@@ -123,8 +140,9 @@ const Index = () => {
                 placeholder="Masukkan Email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="h-12 border-border bg-background placeholder:text-muted-foreground/60"
+                className={`h-12 border-border bg-background placeholder:text-muted-foreground/60 ${errors.email ? "border-destructive" : ""}`}
               />
+              <FormError message={errors.email} />
             </div>
 
             {/* Password Field */}
@@ -139,7 +157,7 @@ const Index = () => {
                   placeholder="Masukkan password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="h-12 border-border bg-background placeholder:text-muted-foreground/60 pr-12"
+                  className={`h-12 border-border bg-background placeholder:text-muted-foreground/60 pr-12 ${errors.password ? "border-destructive" : ""}`}
                 />
                 <button
                   type="button"
@@ -149,6 +167,7 @@ const Index = () => {
                   {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                 </button>
               </div>
+              <FormError message={errors.password} />
             </div>
 
             {/* Remember Me & Forgot Password */}

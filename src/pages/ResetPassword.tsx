@@ -6,6 +6,8 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import ConfirmationPopup from "@/components/ConfirmationPopup";
 import { resetPassword } from "@/services/api";
 import { toast } from "sonner";
+import { resetPasswordSchema } from "@/lib/validations";
+import FormError from "@/components/FormError";
 
 const ResetPassword = () => {
   const [newPassword, setNewPassword] = useState("");
@@ -14,23 +16,26 @@ const ResetPassword = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [errors, setErrors] = useState<{ newPassword?: string; confirmPassword?: string }>({});
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
-  // Token dan email dari URL (Laravel kirim via email link)
   const token = searchParams.get("token") || "";
   const email = searchParams.get("email") || "";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrors({});
 
-    if (newPassword !== confirmPassword) {
-      toast.error("Password tidak cocok");
-      return;
-    }
-
-    if (newPassword.length < 8) {
-      toast.error("Password minimal 8 karakter");
+    // Validate form
+    const result = resetPasswordSchema.safeParse({ newPassword, confirmPassword });
+    if (!result.success) {
+      const fieldErrors: { newPassword?: string; confirmPassword?: string } = {};
+      result.error.errors.forEach((err) => {
+        if (err.path[0] === "newPassword") fieldErrors.newPassword = err.message;
+        if (err.path[0] === "confirmPassword") fieldErrors.confirmPassword = err.message;
+      });
+      setErrors(fieldErrors);
       return;
     }
 
@@ -104,7 +109,7 @@ const ResetPassword = () => {
                     placeholder="Kata Sandi Baru"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    className="h-12 border-border bg-background placeholder:text-muted-foreground/60 pr-12"
+                    className={`h-12 border-border bg-background placeholder:text-muted-foreground/60 pr-12 ${errors.newPassword ? "border-destructive" : ""}`}
                   />
                   <button
                     type="button"
@@ -114,6 +119,7 @@ const ResetPassword = () => {
                     {showNewPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                   </button>
                 </div>
+                <FormError message={errors.newPassword} />
               </div>
 
               {/* Confirm Password */}
@@ -128,7 +134,7 @@ const ResetPassword = () => {
                     placeholder="Masukan Kata Sandi Baru Sekali Lagi"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="h-12 border-border bg-background placeholder:text-muted-foreground/60 pr-12"
+                    className={`h-12 border-border bg-background placeholder:text-muted-foreground/60 pr-12 ${errors.confirmPassword ? "border-destructive" : ""}`}
                   />
                   <button
                     type="button"
@@ -138,6 +144,7 @@ const ResetPassword = () => {
                     {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                   </button>
                 </div>
+                <FormError message={errors.confirmPassword} />
               </div>
 
               <Button
