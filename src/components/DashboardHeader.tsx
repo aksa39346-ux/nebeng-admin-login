@@ -1,4 +1,4 @@
-import { Search, Bell, X, UserCheck, AlertTriangle, XCircle } from "lucide-react";
+import { Search, Bell, X, UserCheck, AlertTriangle, XCircle, User, LogOut } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -147,15 +147,20 @@ const DashboardHeader = ({ userName = "Admin" }: DashboardHeaderProps) => {
               <span className="text-sm font-medium text-foreground">{userName}</span>
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48">
-            <DropdownMenuItem onClick={() => navigate("/dashboard/profile")}>
-              Profile
+          <DropdownMenuContent align="end" className="w-44 p-2 bg-background shadow-lg border rounded-lg">
+            <DropdownMenuItem 
+              onClick={() => navigate("/dashboard/profile")}
+              className="flex items-center justify-between py-3 px-4 cursor-pointer"
+            >
+              <span>View Profil</span>
+              <User size={18} className="text-muted-foreground" />
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => navigate("/dashboard/pengaturan")}>
-              Pengaturan
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => navigate("/")} className="text-destructive">
-              Keluar
+            <DropdownMenuItem 
+              onClick={() => navigate("/")} 
+              className="flex items-center justify-between py-3 px-4 cursor-pointer"
+            >
+              <span>Log out</span>
+              <LogOut size={18} className="text-muted-foreground" />
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
