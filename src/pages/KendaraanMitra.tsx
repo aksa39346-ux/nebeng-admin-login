@@ -244,7 +244,7 @@ const KendaraanMitra = () => {
                             variant="ghost" 
                             size="icon" 
                             className="h-8 w-8 bg-[#1e3a5f] hover:bg-[#152a45]"
-                            onClick={() => {}}
+                            onClick={() => navigate(`/dashboard/mitra-kendaraan/${kendaraan.id}`)}
                           >
                             <Eye size={18} className="text-white" />
                           </Button>
