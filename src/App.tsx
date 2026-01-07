@@ -17,6 +17,7 @@ import KendaraanMitra from "./pages/KendaraanMitra";
 import DetailKendaraanMitra from "./pages/DetailKendaraanMitra";
 import BlokirMitra from "./pages/BlokirMitra";
 import VerifikasiCustomer from "./pages/VerifikasiCustomer";
+import DaftarCustomer from "./pages/DaftarCustomer";
 import DetailCustomer from "./pages/DetailCustomer";
 import { MitraProvider } from "./contexts/MitraContext";
 import { CustomerProvider } from "./contexts/CustomerContext";
@@ -49,6 +50,8 @@ const App = () => (
                 <Route path="mitra-blokir" element={<BlokirMitra />} />
                 <Route path="verifikasi-costumer" element={<VerifikasiCustomer />} />
                 <Route path="verifikasi-costumer/:id" element={<DetailCustomer />} />
+                <Route path="costumer" element={<DaftarCustomer />} />
+                <Route path="costumer/:id" element={<DetailCustomer />} />
               </Route>
               
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
