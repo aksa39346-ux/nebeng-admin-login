@@ -170,7 +170,7 @@ const DetailCustomer = () => {
                 <div>
                   <label className="text-sm text-muted-foreground">Nama Lengkap</label>
                   <Input 
-                    value={customer.informasiPribadi.namaLengkap} 
+                    value={customer.informasiKTP?.namaLengkap || customer.informasiPribadi.namaLengkap} 
                     readOnly
                     className="mt-1 bg-muted/50" 
                   />
@@ -178,14 +178,14 @@ const DetailCustomer = () => {
                 <div>
                   <label className="text-sm text-muted-foreground">NIK</label>
                   <Input 
-                    value="1002981636470019" 
+                    value={customer.informasiKTP?.nik || "-"} 
                     readOnly
                     className="mt-1 bg-muted/50" 
                   />
                 </div>
                 <div>
                   <label className="text-sm text-muted-foreground">Jenis Kelamin</label>
-                  <Select value={customer.informasiPribadi.jenisKelamin} disabled>
+                  <Select value={customer.informasiKTP?.jenisKelamin || customer.informasiPribadi.jenisKelamin} disabled>
                     <SelectTrigger className="mt-1 bg-muted/50">
                       <SelectValue />
                     </SelectTrigger>
@@ -199,7 +199,7 @@ const DetailCustomer = () => {
                   <label className="text-sm text-muted-foreground">Tanggal Lahir</label>
                   <div className="relative mt-1">
                     <Input 
-                      value={customer.informasiPribadi.tanggalLahir} 
+                      value={customer.informasiKTP?.tanggalLahir || customer.informasiPribadi.tanggalLahir} 
                       readOnly
                       className="pr-10 bg-muted/50" 
                     />
@@ -216,7 +216,7 @@ const DetailCustomer = () => {
                       <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
                     </svg>
                   </div>
-                  <p className="text-xs text-blue-600 font-medium">MUHAMMAD REHAN</p>
+                  <p className="text-xs text-blue-600 font-medium uppercase">{customer.informasiKTP?.namaLengkap || customer.nama}</p>
                   <p className="text-[10px] text-blue-500">KTP Indonesia</p>
                 </div>
               </div>

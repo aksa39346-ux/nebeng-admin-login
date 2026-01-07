@@ -13,7 +13,7 @@ export interface CustomerDetailData {
   id: string;
   nama: string;
   kode: string;
-  status: "AKTIF" | "TIDAK_AKTIF";
+  status: "AKTIF" | "TIDAK_AKTIF" | "PENGAJUAN";
   informasiPribadi: {
     namaLengkap: string;
     email: string;
@@ -21,6 +21,13 @@ export interface CustomerDetailData {
     tanggalLahir: string;
     jenisKelamin: string;
     noTlp: string;
+  };
+  informasiKTP: {
+    namaLengkap: string;
+    nik: string;
+    jenisKelamin: string;
+    tanggalLahir: string;
+    alamat: string;
   };
 }
 
@@ -44,7 +51,7 @@ const initialCustomerDetail: Record<string, CustomerDetailData> = {
     id: "200001",
     nama: "Siti Aminah",
     kode: "CST001",
-    status: "AKTIF",
+    status: "PENGAJUAN",
     informasiPribadi: {
       namaLengkap: "Siti Aminah",
       email: "siti.aminah@gmail.com",
@@ -52,6 +59,13 @@ const initialCustomerDetail: Record<string, CustomerDetailData> = {
       tanggalLahir: "10-05-1990",
       jenisKelamin: "Perempuan",
       noTlp: "081234567890",
+    },
+    informasiKTP: {
+      namaLengkap: "Siti Aminah",
+      nik: "3175014505900001",
+      jenisKelamin: "Perempuan",
+      tanggalLahir: "10-05-1990",
+      alamat: "Jl. Merdeka No. 10, Jakarta Pusat",
     },
   },
   "200002": {
@@ -67,6 +81,13 @@ const initialCustomerDetail: Record<string, CustomerDetailData> = {
       jenisKelamin: "Laki - Laki",
       noTlp: "082345678901",
     },
+    informasiKTP: {
+      namaLengkap: "Rudi Hartono",
+      nik: "3273011508880002",
+      jenisKelamin: "Laki - Laki",
+      tanggalLahir: "15-08-1988",
+      alamat: "Jl. Asia Afrika No. 25, Bandung",
+    },
   },
   "200003": {
     id: "200003",
@@ -81,12 +102,19 @@ const initialCustomerDetail: Record<string, CustomerDetailData> = {
       jenisKelamin: "Perempuan",
       noTlp: "083456789012",
     },
+    informasiKTP: {
+      namaLengkap: "Rina Wati",
+      nik: "3578062003920003",
+      jenisKelamin: "Perempuan",
+      tanggalLahir: "20-03-1992",
+      alamat: "Jl. Tunjungan No. 45, Surabaya",
+    },
   },
   "200004": {
     id: "200004",
     nama: "Agus Setiawan",
     kode: "CST004",
-    status: "AKTIF",
+    status: "PENGAJUAN",
     informasiPribadi: {
       namaLengkap: "Agus Setiawan",
       email: "agus.s@gmail.com",
@@ -94,6 +122,13 @@ const initialCustomerDetail: Record<string, CustomerDetailData> = {
       tanggalLahir: "25-11-1985",
       jenisKelamin: "Laki - Laki",
       noTlp: "084567890123",
+    },
+    informasiKTP: {
+      namaLengkap: "Agus Setiawan",
+      nik: "3374012511850004",
+      jenisKelamin: "Laki - Laki",
+      tanggalLahir: "25-11-1985",
+      alamat: "Jl. Pandanaran No. 88, Semarang",
     },
   },
   "200005": {
@@ -109,6 +144,13 @@ const initialCustomerDetail: Record<string, CustomerDetailData> = {
       jenisKelamin: "Perempuan",
       noTlp: "085678901234",
     },
+    informasiKTP: {
+      namaLengkap: "Dewi Lestari",
+      nik: "3471061207930005",
+      jenisKelamin: "Perempuan",
+      tanggalLahir: "12-07-1993",
+      alamat: "Jl. Malioboro No. 123, Yogyakarta",
+    },
   },
   "200006": {
     id: "200006",
@@ -123,12 +165,19 @@ const initialCustomerDetail: Record<string, CustomerDetailData> = {
       jenisKelamin: "Laki - Laki",
       noTlp: "086789012345",
     },
+    informasiKTP: {
+      namaLengkap: "Bambang Wijaya",
+      nik: "3573013001870006",
+      jenisKelamin: "Laki - Laki",
+      tanggalLahir: "30-01-1987",
+      alamat: "Jl. Ijen No. 56, Malang",
+    },
   },
   "200007": {
     id: "200007",
     nama: "Sri Mulyani",
     kode: "CST007",
-    status: "AKTIF",
+    status: "PENGAJUAN",
     informasiPribadi: {
       namaLengkap: "Sri Mulyani",
       email: "sri.m@gmail.com",
@@ -136,6 +185,13 @@ const initialCustomerDetail: Record<string, CustomerDetailData> = {
       tanggalLahir: "05-09-1991",
       jenisKelamin: "Perempuan",
       noTlp: "087890123456",
+    },
+    informasiKTP: {
+      namaLengkap: "Sri Mulyani",
+      nik: "3372060509910007",
+      jenisKelamin: "Perempuan",
+      tanggalLahir: "05-09-1991",
+      alamat: "Jl. Slamet Riyadi No. 200, Solo",
     },
   },
   "200008": {
@@ -151,6 +207,13 @@ const initialCustomerDetail: Record<string, CustomerDetailData> = {
       jenisKelamin: "Laki - Laki",
       noTlp: "088901234567",
     },
+    informasiKTP: {
+      namaLengkap: "Hasan Basri",
+      nik: "1271011804890008",
+      jenisKelamin: "Laki - Laki",
+      tanggalLahir: "18-04-1989",
+      alamat: "Jl. Gatot Subroto No. 77, Medan",
+    },
   },
   "200009": {
     id: "200009",
@@ -165,12 +228,19 @@ const initialCustomerDetail: Record<string, CustomerDetailData> = {
       jenisKelamin: "Perempuan",
       noTlp: "089012345678",
     },
+    informasiKTP: {
+      namaLengkap: "Yuni Astuti",
+      nik: "1671062206940009",
+      jenisKelamin: "Perempuan",
+      tanggalLahir: "22-06-1994",
+      alamat: "Jl. Sudirman No. 150, Palembang",
+    },
   },
   "200010": {
     id: "200010",
     nama: "Andi Pratama",
     kode: "CST010",
-    status: "AKTIF",
+    status: "PENGAJUAN",
     informasiPribadi: {
       namaLengkap: "Andi Pratama",
       email: "andi.p@gmail.com",
@@ -179,13 +249,20 @@ const initialCustomerDetail: Record<string, CustomerDetailData> = {
       jenisKelamin: "Laki - Laki",
       noTlp: "081122334455",
     },
+    informasiKTP: {
+      namaLengkap: "Andi Pratama",
+      nik: "7371010812860010",
+      jenisKelamin: "Laki - Laki",
+      tanggalLahir: "08-12-1986",
+      alamat: "Jl. Pettarani No. 99, Makassar",
+    },
   },
 };
 
 interface CustomerContextType {
   customerList: CustomerData[];
   customerDetail: Record<string, CustomerDetailData>;
-  updateCustomerStatus: (id: string, status: "AKTIF" | "TIDAK_AKTIF") => void;
+  updateCustomerStatus: (id: string, status: "AKTIF" | "TIDAK_AKTIF" | "PENGAJUAN") => void;
   updateCustomerInfo: (id: string, info: CustomerDetailData["informasiPribadi"]) => void;
 }
 
@@ -195,7 +272,7 @@ export const CustomerProvider = ({ children }: { children: ReactNode }) => {
   const [customerList, setCustomerList] = useState<CustomerData[]>(initialCustomerList);
   const [customerDetail, setCustomerDetail] = useState<Record<string, CustomerDetailData>>(initialCustomerDetail);
 
-  const updateCustomerStatus = (id: string, status: "AKTIF" | "TIDAK_AKTIF") => {
+  const updateCustomerStatus = (id: string, status: "AKTIF" | "TIDAK_AKTIF" | "PENGAJUAN") => {
     setCustomerList(prev => 
       prev.map(customer => 
         customer.id === id ? { ...customer, status } : customer
