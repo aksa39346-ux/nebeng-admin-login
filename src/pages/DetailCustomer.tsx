@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { useCustomer } from "@/contexts/CustomerContext";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import ktpPlaceholder from "@/assets/ktp-placeholder.png";
 
 const getStatusBadge = (status: "AKTIF" | "TIDAK_AKTIF" | "PENGAJUAN") => {
   switch (status) {
@@ -209,17 +210,11 @@ const DetailCustomer = () => {
               </div>
             </div>
             <div className="flex justify-center md:justify-end">
-              <div className="w-40 h-28 bg-gradient-to-br from-blue-100 to-blue-50 rounded-lg border-2 border-blue-200 flex items-center justify-center overflow-hidden">
-                <div className="text-center p-2">
-                  <div className="w-12 h-12 mx-auto bg-blue-200 rounded-full flex items-center justify-center mb-1">
-                    <svg viewBox="0 0 24 24" className="w-6 h-6 text-blue-600" fill="currentColor">
-                      <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-                    </svg>
-                  </div>
-                  <p className="text-xs text-blue-600 font-medium uppercase">{customer.informasiKTP?.namaLengkap || customer.nama}</p>
-                  <p className="text-[10px] text-blue-500">KTP Indonesia</p>
-                </div>
-              </div>
+              <img 
+                src={ktpPlaceholder} 
+                alt={`KTP ${customer.informasiKTP?.namaLengkap || customer.nama}`}
+                className="w-48 h-auto rounded-lg border-2 border-blue-200 shadow-md object-cover"
+              />
             </div>
           </div>
         </div>
