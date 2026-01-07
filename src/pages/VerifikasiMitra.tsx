@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, Calendar as CalendarIcon, Download, Eye, Lock } from "lucide-react";
+import { Search, Calendar as CalendarIcon, Download, Eye, Lock, LockOpen } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,7 @@ import { id as localeId } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import * as XLSX from "xlsx";
 import BlockMitraPopup from "@/components/BlockMitraPopup";
+import UnblockMitraPopup from "@/components/UnblockMitraPopup";
 import { useMitra } from "@/contexts/MitraContext";
 import {
   Select,
@@ -38,7 +39,7 @@ const getStatusBadge = (status: string) => {
 
 const VerifikasiMitra = () => {
   const navigate = useNavigate();
-  const { mitraList, blockMitra } = useMitra();
+  const { mitraList, blockMitra, unblockMitra } = useMitra();
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [entriesPerPage, setEntriesPerPage] = useState("10");
@@ -46,6 +47,8 @@ const VerifikasiMitra = () => {
   const [statusFilter, setStatusFilter] = useState<string>("AKTIF");
   const [blockPopupOpen, setBlockPopupOpen] = useState(false);
   const [blockSuccessOpen, setBlockSuccessOpen] = useState(false);
+  const [unblockPopupOpen, setUnblockPopupOpen] = useState(false);
+  const [unblockSuccessOpen, setUnblockSuccessOpen] = useState(false);
   const [selectedMitraId, setSelectedMitraId] = useState<string | null>(null);
 
   // Filter data based on search, date, and status filter
@@ -142,6 +145,20 @@ const VerifikasiMitra = () => {
       blockMitra(selectedMitraId);
     }
     setBlockSuccessOpen(true);
+  };
+
+  // Handle unblock mitra
+  const handleUnblockClick = (mitraId: string) => {
+    setSelectedMitraId(mitraId);
+    setUnblockPopupOpen(true);
+  };
+
+  const handleUnblockConfirm = () => {
+    setUnblockPopupOpen(false);
+    if (selectedMitraId) {
+      unblockMitra(selectedMitraId);
+    }
+    setUnblockSuccessOpen(true);
   };
 
   // Handle status filter change
@@ -270,15 +287,25 @@ const VerifikasiMitra = () => {
                           >
                             <Eye size={18} className="text-white" />
                           </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="h-8 w-8 bg-red-600 hover:bg-red-700"
-                            onClick={() => handleBlockClick(mitra.id)}
-                            disabled={mitra.status === "DIBLOCK"}
-                          >
-                            <Lock size={18} className="text-white" />
-                          </Button>
+                          {mitra.status === "DIBLOCK" ? (
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-8 w-8 bg-green-600 hover:bg-green-700"
+                              onClick={() => handleUnblockClick(mitra.id)}
+                            >
+                              <LockOpen size={18} className="text-white" />
+                            </Button>
+                          ) : (
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-8 w-8 bg-red-600 hover:bg-red-700"
+                              onClick={() => handleBlockClick(mitra.id)}
+                            >
+                              <Lock size={18} className="text-white" />
+                            </Button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -360,6 +387,22 @@ const VerifikasiMitra = () => {
       <BlockMitraPopup
         open={blockSuccessOpen}
         onOpenChange={setBlockSuccessOpen}
+        onConfirm={() => {}}
+        type="success"
+      />
+
+      {/* Unblock Confirmation Popup */}
+      <UnblockMitraPopup
+        open={unblockPopupOpen}
+        onOpenChange={setUnblockPopupOpen}
+        onConfirm={handleUnblockConfirm}
+        type="confirm"
+      />
+
+      {/* Unblock Success Popup */}
+      <UnblockMitraPopup
+        open={unblockSuccessOpen}
+        onOpenChange={setUnblockSuccessOpen}
         onConfirm={() => {}}
         type="success"
       />
