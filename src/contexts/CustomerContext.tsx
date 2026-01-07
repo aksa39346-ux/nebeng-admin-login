@@ -186,6 +186,7 @@ interface CustomerContextType {
   customerList: CustomerData[];
   customerDetail: Record<string, CustomerDetailData>;
   updateCustomerStatus: (id: string, status: "AKTIF" | "TIDAK_AKTIF") => void;
+  updateCustomerInfo: (id: string, info: CustomerDetailData["informasiPribadi"]) => void;
 }
 
 const CustomerContext = createContext<CustomerContextType | undefined>(undefined);
@@ -212,8 +213,34 @@ export const CustomerProvider = ({ children }: { children: ReactNode }) => {
     });
   };
 
+  const updateCustomerInfo = (id: string, info: CustomerDetailData["informasiPribadi"]) => {
+    // Update list
+    setCustomerList(prev => 
+      prev.map(customer => 
+        customer.id === id 
+          ? { ...customer, nama: info.namaLengkap, email: info.email, noTlp: info.noTlp } 
+          : customer
+      )
+    );
+    
+    // Update detail
+    setCustomerDetail(prev => {
+      if (prev[id]) {
+        return {
+          ...prev,
+          [id]: { 
+            ...prev[id], 
+            nama: info.namaLengkap,
+            informasiPribadi: info 
+          }
+        };
+      }
+      return prev;
+    });
+  };
+
   return (
-    <CustomerContext.Provider value={{ customerList, customerDetail, updateCustomerStatus }}>
+    <CustomerContext.Provider value={{ customerList, customerDetail, updateCustomerStatus, updateCustomerInfo }}>
       {children}
     </CustomerContext.Provider>
   );
