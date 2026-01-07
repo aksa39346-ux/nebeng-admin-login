@@ -1,9 +1,15 @@
+import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ChevronLeft, Edit, Calendar, Search as SearchIcon } from "lucide-react";
+import { ChevronLeft, Edit, Calendar, Search as SearchIcon, CheckCircle, XCircle, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 // Dummy data dengan 3 status berbeda
 const mitraDetailData: Record<string, {
@@ -124,6 +130,24 @@ const mitraDetailData: Record<string, {
   },
 };
 
+const alasanPenolakan = [
+  "Tidak Memenuhi Persyaratan Kendaraan",
+  "Ketidaksesuaian Data Pengemudi",
+  "Dokumen Kendaraan Tidak Valid",
+  "Riwayat Pengemudi Tidak Memenuhi Kriteria",
+  "Kendaraan Tidak Layak Operasi",
+  "Penolakan Terhadap Aturan dan Kebijakan Aplikasi",
+  "Indikasi Penipuan atau Kecurangan",
+  "Lainnya",
+];
+
+const alasanPerubahan = [
+  "Data sudah diperbaiki",
+  "Dokumen baru diunggah",
+  "Verifikasi ulang diperlukan",
+  "Kesalahan penolakan sebelumnya",
+];
+
 const getStatusBadge = (status: "PENGAJUAN" | "TERVERIFIKASI" | "DITOLAK") => {
   switch (status) {
     case "PENGAJUAN":
@@ -141,6 +165,22 @@ const DetailMitra = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   
+  const [status, setStatus] = useState<"PENGAJUAN" | "TERVERIFIKASI" | "DITOLAK">(
+    id ? mitraDetailData[id]?.status || "PENGAJUAN" : "PENGAJUAN"
+  );
+  
+  // Modal states
+  const [showConfirmTolak, setShowConfirmTolak] = useState(false);
+  const [showAlasanTolak, setShowAlasanTolak] = useState(false);
+  const [showSuccessVerifikasi, setShowSuccessVerifikasi] = useState(false);
+  const [showSuccessTolak, setShowSuccessTolak] = useState(false);
+  const [showUbahStatus, setShowUbahStatus] = useState(false);
+  
+  // Form states
+  const [selectedAlasan, setSelectedAlasan] = useState("");
+  const [catatanLainnya, setCatatanLainnya] = useState("");
+  const [selectedAlasanPerubahan, setSelectedAlasanPerubahan] = useState("");
+  
   const mitra = id ? mitraDetailData[id] : null;
   
   if (!mitra) {
@@ -151,6 +191,30 @@ const DetailMitra = () => {
       </div>
     );
   }
+
+  const handleVerifikasi = () => {
+    setStatus("TERVERIFIKASI");
+    setShowSuccessVerifikasi(true);
+  };
+
+  const handleTolakConfirm = () => {
+    setShowConfirmTolak(false);
+    setShowAlasanTolak(true);
+  };
+
+  const handleSubmitTolak = () => {
+    setStatus("DITOLAK");
+    setShowAlasanTolak(false);
+    setShowSuccessTolak(true);
+    setSelectedAlasan("");
+    setCatatanLainnya("");
+  };
+
+  const handleUbahKeProses = () => {
+    setStatus("PENGAJUAN");
+    setShowUbahStatus(false);
+    setSelectedAlasanPerubahan("");
+  };
 
   return (
     <div className="space-y-6">
@@ -195,14 +259,44 @@ const DetailMitra = () => {
                 </svg>
               </div>
               <div className="mt-2">
-                {getStatusBadge(mitra.status)}
+                {getStatusBadge(status)}
               </div>
             </div>
           </div>
-          <Button variant="outline" className="gap-2">
-            <span>Edit</span>
-            <Edit size={16} />
-          </Button>
+          <div className="flex items-center gap-2">
+            {/* Action buttons based on status */}
+            {status === "PENGAJUAN" && (
+              <>
+                <Button 
+                  variant="outline" 
+                  className="gap-2 border-red-500 text-red-500 hover:bg-red-50 hover:text-red-600"
+                  onClick={() => setShowConfirmTolak(true)}
+                >
+                  <XCircle size={16} />
+                  Tolak
+                </Button>
+                <Button 
+                  className="gap-2 bg-green-600 hover:bg-green-700"
+                  onClick={handleVerifikasi}
+                >
+                  <CheckCircle size={16} />
+                  Verifikasi
+                </Button>
+              </>
+            )}
+            {status === "DITOLAK" && (
+              <Button 
+                className="gap-2"
+                onClick={() => setShowUbahStatus(true)}
+              >
+                Ubah ke Proses Verifikasi
+              </Button>
+            )}
+            <Button variant="outline" className="gap-2">
+              <span>Edit</span>
+              <Edit size={16} />
+            </Button>
+          </div>
         </div>
 
         {/* Informasi Pribadi */}
@@ -307,6 +401,211 @@ const DetailMitra = () => {
           </div>
         </div>
       </div>
+
+      {/* Modal: Konfirmasi Tolak */}
+      <Dialog open={showConfirmTolak} onOpenChange={setShowConfirmTolak}>
+        <DialogContent className="sm:max-w-md text-center">
+          <div className="flex flex-col items-center py-4">
+            <h2 className="text-lg font-semibold mb-2">
+              Anda akan Menolak verifikasi mitra ini.
+            </h2>
+            <p className="text-muted-foreground mb-6">Apakah Anda yakin?</p>
+            <div className="relative mb-6">
+              <div className="w-20 h-24 bg-muted rounded-lg flex items-center justify-center">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-muted-foreground">
+                  <path d="M9 12h6M9 16h6M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z" />
+                </svg>
+              </div>
+              <div className="absolute -bottom-2 -right-2 bg-red-500 rounded-full p-1">
+                <XCircle size={20} className="text-white" />
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <Button 
+                variant="outline" 
+                onClick={() => setShowConfirmTolak(false)}
+                className="min-w-24"
+              >
+                Kembali
+              </Button>
+              <Button 
+                className="min-w-24 bg-red-500 hover:bg-red-600"
+                onClick={handleTolakConfirm}
+              >
+                Ya.
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal: Alasan Penolakan */}
+      <Dialog open={showAlasanTolak} onOpenChange={setShowAlasanTolak}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-6 w-6"
+                onClick={() => {
+                  setShowAlasanTolak(false);
+                  setShowConfirmTolak(true);
+                }}
+              >
+                <ChevronLeft size={16} />
+              </Button>
+              <DialogTitle>Pembatalan Verifikasi Mitra</DialogTitle>
+            </div>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-sm text-muted-foreground mb-4">
+              Berikan alasan pembatalan verifikasi mitra!
+            </p>
+            <RadioGroup value={selectedAlasan} onValueChange={setSelectedAlasan}>
+              {alasanPenolakan.map((alasan) => (
+                <div key={alasan} className="flex items-center space-x-2 py-1">
+                  <RadioGroupItem value={alasan} id={alasan} />
+                  <Label htmlFor={alasan} className="text-sm font-normal cursor-pointer">
+                    {alasan}
+                  </Label>
+                </div>
+              ))}
+            </RadioGroup>
+            
+            {selectedAlasan === "Lainnya" && (
+              <Textarea
+                placeholder="Tambahkan catatan (wajib jika memilih 'Lainnya')"
+                value={catatanLainnya}
+                onChange={(e) => setCatatanLainnya(e.target.value)}
+                className="mt-4"
+                rows={3}
+              />
+            )}
+            
+            <div className="flex flex-col gap-2 mt-6">
+              <Button 
+                className="w-full bg-red-500 hover:bg-red-600"
+                onClick={handleSubmitTolak}
+                disabled={!selectedAlasan || (selectedAlasan === "Lainnya" && !catatanLainnya)}
+              >
+                Tolak verifikasi
+              </Button>
+              <Button 
+                variant="outline" 
+                className="w-full"
+                onClick={() => setShowAlasanTolak(false)}
+              >
+                Kembali
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal: Success Verifikasi */}
+      <Dialog open={showSuccessVerifikasi} onOpenChange={setShowSuccessVerifikasi}>
+        <DialogContent className="sm:max-w-md text-center">
+          <div className="flex flex-col items-center py-4">
+            <h2 className="text-lg font-semibold mb-2">
+              Anda telah berhasil memverifikasi mitra.
+            </h2>
+            <p className="text-muted-foreground mb-6">Semua data sudah diperbarui.</p>
+            <div className="relative mb-6">
+              <div className="w-20 h-24 bg-blue-100 rounded-lg flex items-center justify-center">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" className="text-primary">
+                  <circle cx="9" cy="7" r="4" stroke="currentColor" strokeWidth="2" />
+                  <path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2" stroke="currentColor" strokeWidth="2" />
+                  <rect x="12" y="8" width="8" height="10" rx="1" stroke="currentColor" strokeWidth="1.5" fill="white" />
+                  <path d="M14 11h4M14 13h4M14 15h2" stroke="currentColor" strokeWidth="1" />
+                </svg>
+              </div>
+              <div className="absolute -bottom-1 -right-1 bg-green-500 rounded-full p-0.5">
+                <CheckCircle size={18} className="text-white" />
+              </div>
+            </div>
+            <Button 
+              className="min-w-24"
+              onClick={() => setShowSuccessVerifikasi(false)}
+            >
+              Oke
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal: Success Tolak */}
+      <Dialog open={showSuccessTolak} onOpenChange={setShowSuccessTolak}>
+        <DialogContent className="sm:max-w-md text-center">
+          <div className="flex flex-col items-center py-4">
+            <h2 className="text-lg font-semibold mb-6">
+              Anda telah menolak verifikasi mitra
+            </h2>
+            <div className="relative mb-6">
+              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none">
+                  <circle cx="12" cy="12" r="10" stroke="hsl(var(--destructive))" strokeWidth="2" />
+                  <path d="M8 8l8 8M16 8l-8 8" stroke="hsl(var(--destructive))" strokeWidth="2" strokeLinecap="round" />
+                </svg>
+              </div>
+              <div className="absolute -top-1 -right-1 bg-red-500 text-white text-[8px] font-bold px-1 rounded transform rotate-12">
+                CANCELLED
+              </div>
+            </div>
+            <Button 
+              className="min-w-24"
+              onClick={() => setShowSuccessTolak(false)}
+            >
+              Oke
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal: Ubah Status ke Proses */}
+      <Dialog open={showUbahStatus} onOpenChange={setShowUbahStatus}>
+        <DialogContent className="sm:max-w-md">
+          <div className="py-4">
+            <div className="flex items-center gap-2 text-amber-600 mb-2">
+              <AlertTriangle size={20} />
+              <h2 className="text-lg font-semibold">Konfirmasi Perubahan Status</h2>
+            </div>
+            <p className="text-sm text-muted-foreground mb-4">
+              Anda ingin mengubah status dari Ditolak menjadi Proses.<br />
+              Silakan pilih alasan perubahan.
+            </p>
+            
+            <Select value={selectedAlasanPerubahan} onValueChange={setSelectedAlasanPerubahan}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Pilih Alasan Perubahan" />
+              </SelectTrigger>
+              <SelectContent>
+                {alasanPerubahan.map((alasan) => (
+                  <SelectItem key={alasan} value={alasan}>
+                    {alasan}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            
+            <div className="flex gap-3 mt-6">
+              <Button 
+                variant="outline" 
+                onClick={() => setShowUbahStatus(false)}
+              >
+                Batal
+              </Button>
+              <Button 
+                className="bg-primary"
+                onClick={handleUbahKeProses}
+                disabled={!selectedAlasanPerubahan}
+              >
+                Ubah ke proses verifikasi
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
