@@ -18,31 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
-interface RefundData {
-  id: string;
-  noOrder: string;
-  namaCustomer: string;
-  namaDriver: string;
-  tanggal: Date;
-  noTransaksi: string;
-  jumlahRefund: number;
-  status: "PROSES" | "SELESAI" | "BATAL";
-}
-
-// Sample data
-const initialRefundList: RefundData[] = [
-  { id: "R001", noOrder: "0091", namaCustomer: "Muhammda Abdul", namaDriver: "Maulana Injil", tanggal: new Date(2023, 9, 17), noTransaksi: "INV-123456789", jumlahRefund: 60000, status: "PROSES" },
-  { id: "R002", noOrder: "0091", namaCustomer: "Muhammda Abdul", namaDriver: "Maulana Injil", tanggal: new Date(2023, 9, 17), noTransaksi: "INV-123456789", jumlahRefund: 60000, status: "SELESAI" },
-  { id: "R003", noOrder: "0091", namaCustomer: "Muhammda Abdul", namaDriver: "Maulana Injil", tanggal: new Date(2023, 9, 17), noTransaksi: "INV-123456789", jumlahRefund: 60000, status: "SELESAI" },
-  { id: "R004", noOrder: "0091", namaCustomer: "Muhammda Abdul", namaDriver: "Maulana Injil", tanggal: new Date(2023, 9, 17), noTransaksi: "INV-123456789", jumlahRefund: 60000, status: "SELESAI" },
-  { id: "R005", noOrder: "0091", namaCustomer: "Muhammda Abdul", namaDriver: "Maulana Injil", tanggal: new Date(2023, 9, 17), noTransaksi: "INV-123456789", jumlahRefund: 60000, status: "PROSES" },
-  { id: "R006", noOrder: "0091", namaCustomer: "Muhammda Abdul", namaDriver: "Maulana Injil", tanggal: new Date(2023, 9, 17), noTransaksi: "INV-123456789", jumlahRefund: 60000, status: "BATAL" },
-  { id: "R007", noOrder: "0091", namaCustomer: "Muhammda Abdul", namaDriver: "Maulana Injil", tanggal: new Date(2023, 9, 17), noTransaksi: "INV-123456789", jumlahRefund: 60000, status: "BATAL" },
-  { id: "R008", noOrder: "0091", namaCustomer: "Muhammda Abdul", namaDriver: "Maulana Injil", tanggal: new Date(2023, 9, 17), noTransaksi: "INV-123456789", jumlahRefund: 60000, status: "BATAL" },
-  { id: "R009", noOrder: "0091", namaCustomer: "Muhammda Abdul", namaDriver: "Maulana Injil", tanggal: new Date(2023, 9, 17), noTransaksi: "INV-123456789", jumlahRefund: 60000, status: "PROSES" },
-  { id: "R010", noOrder: "0091", namaCustomer: "Muhammda Abdul", namaDriver: "Maulana Injil", tanggal: new Date(2023, 9, 17), noTransaksi: "INV-123456789", jumlahRefund: 60000, status: "SELESAI" },
-];
+import { useRefund } from "@/contexts/RefundContext";
 
 const getStatusBadge = (status: string) => {
   switch (status) {
@@ -64,7 +40,8 @@ const formatCurrency = (amount: number | undefined) => {
 
 const Refund = () => {
   const navigate = useNavigate();
-  const [refundList] = useState<RefundData[]>(initialRefundList);
+  const { refundList } = useRefund();
+  
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [entriesPerPage, setEntriesPerPage] = useState("10");
