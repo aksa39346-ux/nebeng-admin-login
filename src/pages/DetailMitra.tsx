@@ -181,6 +181,7 @@ const DetailMitra = () => {
   const [showSuccessVerifikasi, setShowSuccessVerifikasi] = useState(false);
   const [showSuccessTolak, setShowSuccessTolak] = useState(false);
   const [showUbahStatus, setShowUbahStatus] = useState(false);
+  const [previewImage, setPreviewImage] = useState<{ src: string; title: string } | null>(null);
   
   // Form states
   const [selectedAlasan, setSelectedAlasan] = useState("");
@@ -394,9 +395,12 @@ const DetailMitra = () => {
                 </div>
               </div>
             </div>
-            <div className="w-32 h-20 bg-muted rounded-lg flex items-center justify-center overflow-hidden border">
+            <div 
+              className="relative w-32 h-20 bg-muted rounded-lg flex items-center justify-center overflow-hidden border cursor-pointer hover:opacity-80 transition-opacity"
+              onClick={() => setPreviewImage({ src: mitra.informasiKTP.fotoKTP, title: "Foto KTP" })}
+            >
               <img src={mitra.informasiKTP.fotoKTP} alt="KTP" className="w-full h-full object-cover" />
-              <div className="absolute bottom-1 left-1 bg-primary/80 rounded-full p-1">
+              <div className="absolute bottom-1 right-1 bg-primary/80 rounded-full p-1">
                 <SearchIcon size={12} className="text-white" />
               </div>
             </div>
@@ -428,9 +432,12 @@ const DetailMitra = () => {
                 </div>
               </div>
             </div>
-            <div className="w-32 h-20 bg-muted rounded-lg flex items-center justify-center overflow-hidden border">
+            <div 
+              className="relative w-32 h-20 bg-muted rounded-lg flex items-center justify-center overflow-hidden border cursor-pointer hover:opacity-80 transition-opacity"
+              onClick={() => setPreviewImage({ src: mitra.informasiSIM.fotoSIM, title: "Foto SIM" })}
+            >
               <img src={mitra.informasiSIM.fotoSIM} alt="SIM" className="w-full h-full object-cover" />
-              <div className="absolute bottom-1 left-1 bg-primary/80 rounded-full p-1">
+              <div className="absolute bottom-1 right-1 bg-primary/80 rounded-full p-1">
                 <SearchIcon size={12} className="text-white" />
               </div>
             </div>
@@ -638,6 +645,24 @@ const DetailMitra = () => {
               >
                 Ubah ke proses verifikasi
               </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal: Image Preview */}
+      <Dialog open={!!previewImage} onOpenChange={() => setPreviewImage(null)}>
+        <DialogContent className="sm:max-w-2xl p-0 overflow-hidden">
+          <DialogHeader className="p-4 pb-0">
+            <DialogTitle>{previewImage?.title}</DialogTitle>
+          </DialogHeader>
+          <div className="p-4">
+            <div className="w-full aspect-[3/2] bg-muted rounded-lg overflow-hidden flex items-center justify-center">
+              <img 
+                src={previewImage?.src} 
+                alt={previewImage?.title} 
+                className="max-w-full max-h-full object-contain"
+              />
             </div>
           </div>
         </DialogContent>
