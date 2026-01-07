@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, Calendar as CalendarIcon, Download, Eye } from "lucide-react";
+import { Search, Calendar as CalendarIcon, Download, Eye, Lock, LockOpen } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,8 @@ import { id as localeId } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import * as XLSX from "xlsx";
 import { useCustomer } from "@/contexts/CustomerContext";
+import BlockCustomerPopup from "@/components/BlockCustomerPopup";
+import UnblockCustomerPopup from "@/components/UnblockCustomerPopup";
 import {
   Select,
   SelectContent,
@@ -37,12 +39,19 @@ const getStatusBadge = (status: string) => {
 
 const VerifikasiCustomer = () => {
   const navigate = useNavigate();
-  const { customerList } = useCustomer();
+  const { customerList, blockCustomer, unblockCustomer } = useCustomer();
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [entriesPerPage, setEntriesPerPage] = useState("10");
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [statusFilter, setStatusFilter] = useState<string>("SEMUA");
+  
+  // Block/Unblock modal states
+  const [showBlockConfirm, setShowBlockConfirm] = useState(false);
+  const [showBlockSuccess, setShowBlockSuccess] = useState(false);
+  const [showUnblockConfirm, setShowUnblockConfirm] = useState(false);
+  const [showUnblockSuccess, setShowUnblockSuccess] = useState(false);
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
 
   // Filter data based on search, date, and status filter
   const filteredData = useMemo(() => {
@@ -124,6 +133,32 @@ const VerifikasiCustomer = () => {
   const handleStatusFilterChange = (value: string) => {
     setStatusFilter(value);
     setCurrentPage(1);
+  };
+
+  const handleBlockClick = (customerId: string) => {
+    setSelectedCustomerId(customerId);
+    setShowBlockConfirm(true);
+  };
+
+  const handleUnblockClick = (customerId: string) => {
+    setSelectedCustomerId(customerId);
+    setShowUnblockConfirm(true);
+  };
+
+  const handleConfirmBlock = () => {
+    if (selectedCustomerId) {
+      blockCustomer(selectedCustomerId);
+      setShowBlockConfirm(false);
+      setShowBlockSuccess(true);
+    }
+  };
+
+  const handleConfirmUnblock = () => {
+    if (selectedCustomerId) {
+      unblockCustomer(selectedCustomerId);
+      setShowUnblockConfirm(false);
+      setShowUnblockSuccess(true);
+    }
   };
 
   // Generate page numbers for pagination
@@ -237,7 +272,7 @@ const VerifikasiCustomer = () => {
                         {getStatusBadge(customer.status)}
                       </td>
                       <td className="py-4 px-4">
-                        <div className="flex items-center justify-center">
+                        <div className="flex items-center justify-center gap-2">
                           <Button 
                             variant="ghost" 
                             size="icon" 
@@ -246,6 +281,25 @@ const VerifikasiCustomer = () => {
                           >
                             <Eye size={18} className="text-white" />
                           </Button>
+                          {customer.status === "DIBLOCK" ? (
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-8 w-8 bg-green-600 hover:bg-green-700"
+                              onClick={() => handleUnblockClick(customer.id)}
+                            >
+                              <LockOpen size={18} className="text-white" />
+                            </Button>
+                          ) : (
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-8 w-8 bg-red-500 hover:bg-red-600"
+                              onClick={() => handleBlockClick(customer.id)}
+                            >
+                              <Lock size={18} className="text-white" />
+                            </Button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -314,6 +368,36 @@ const VerifikasiCustomer = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Block Customer Popup */}
+      <BlockCustomerPopup
+        open={showBlockConfirm}
+        onOpenChange={setShowBlockConfirm}
+        onConfirm={handleConfirmBlock}
+        type="confirm"
+      />
+
+      <BlockCustomerPopup
+        open={showBlockSuccess}
+        onOpenChange={setShowBlockSuccess}
+        onConfirm={() => {}}
+        type="success"
+      />
+
+      {/* Unblock Customer Popup */}
+      <UnblockCustomerPopup
+        open={showUnblockConfirm}
+        onOpenChange={setShowUnblockConfirm}
+        onConfirm={handleConfirmUnblock}
+        type="confirm"
+      />
+
+      <UnblockCustomerPopup
+        open={showUnblockSuccess}
+        onOpenChange={setShowUnblockSuccess}
+        onConfirm={() => {}}
+        type="success"
+      />
     </div>
   );
 };
