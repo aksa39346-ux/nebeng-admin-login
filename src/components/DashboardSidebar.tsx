@@ -46,7 +46,7 @@ const mainMenuItems: MenuItem[] = [
     icon: Users,
     children: [
       { title: "Daftar Costumer", path: "/dashboard/costumer" },
-      { title: "Feedback", path: "/dashboard/costumer-feedback" },
+      { title: "Blokir", path: "/dashboard/costumer-blokir" },
     ],
   },
   { title: "Pesanan", icon: ShoppingCart, path: "/dashboard/pesanan" },
