@@ -18,31 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
-interface PesananData {
-  id: string;
-  noOrder: string;
-  namaCustomer: string;
-  namaDriver: string;
-  tanggal: Date;
-  layanan: string;
-  harga: number;
-  status: "PROSES" | "SELESAI" | "BATAL";
-}
-
-// Sample data
-const initialPesananList: PesananData[] = [
-  { id: "P001", noOrder: "0091", namaCustomer: "Muhammda Abdul", namaDriver: "Maulana Injil", tanggal: new Date(2023, 9, 17), layanan: "Motor", harga: 60000, status: "PROSES" },
-  { id: "P002", noOrder: "0091", namaCustomer: "Muhammda Abdul", namaDriver: "Maulana Injil", tanggal: new Date(2023, 9, 17), layanan: "Motor", harga: 60000, status: "SELESAI" },
-  { id: "P003", noOrder: "0091", namaCustomer: "Muhammda Abdul", namaDriver: "Maulana Injil", tanggal: new Date(2023, 9, 17), layanan: "Mobil", harga: 60000, status: "SELESAI" },
-  { id: "P004", noOrder: "0091", namaCustomer: "Muhammda Abdul", namaDriver: "Maulana Injil", tanggal: new Date(2023, 9, 17), layanan: "Nebeng Barang", harga: 60000, status: "SELESAI" },
-  { id: "P005", noOrder: "0091", namaCustomer: "Muhammda Abdul", namaDriver: "Maulana Injil", tanggal: new Date(2023, 9, 17), layanan: "Titip Barang", harga: 60000, status: "PROSES" },
-  { id: "P006", noOrder: "0091", namaCustomer: "Muhammda Abdul", namaDriver: "Maulana Injil", tanggal: new Date(2023, 9, 17), layanan: "Motor", harga: 60000, status: "BATAL" },
-  { id: "P007", noOrder: "0091", namaCustomer: "Muhammda Abdul", namaDriver: "Maulana Injil", tanggal: new Date(2023, 9, 17), layanan: "Motor", harga: 60000, status: "BATAL" },
-  { id: "P008", noOrder: "0091", namaCustomer: "Muhammda Abdul", namaDriver: "Maulana Injil", tanggal: new Date(2023, 9, 17), layanan: "Motor", harga: 60000, status: "BATAL" },
-  { id: "P009", noOrder: "0091", namaCustomer: "Muhammda Abdul", namaDriver: "Maulana Injil", tanggal: new Date(2023, 9, 17), layanan: "Nebeng Barang", harga: 60000, status: "PROSES" },
-  { id: "P010", noOrder: "0091", namaCustomer: "Muhammda Abdul", namaDriver: "Maulana Injil", tanggal: new Date(2023, 9, 17), layanan: "Motor", harga: 60000, status: "SELESAI" },
-];
+import { usePesanan } from "@/contexts/PesananContext";
 
 const getStatusBadge = (status: string) => {
   switch (status) {
@@ -67,7 +43,7 @@ const formatCurrency = (amount: number) => {
 
 const Pesanan = () => {
   const navigate = useNavigate();
-  const [pesananList] = useState<PesananData[]>(initialPesananList);
+  const { pesananList } = usePesanan();
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [entriesPerPage, setEntriesPerPage] = useState("10");

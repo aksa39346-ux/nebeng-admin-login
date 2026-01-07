@@ -24,6 +24,7 @@ import Pesanan from "./pages/Pesanan";
 import DetailPesanan from "./pages/DetailPesanan";
 import { MitraProvider } from "./contexts/MitraContext";
 import { CustomerProvider } from "./contexts/CustomerContext";
+import { PesananProvider } from "./contexts/PesananContext";
 
 const queryClient = new QueryClient();
 
@@ -32,38 +33,40 @@ const App = () => (
     <TooltipProvider>
       <MitraProvider>
         <CustomerProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/forgot-password" element={<ForgotPassword />} />
-              <Route path="/reset-password" element={<ResetPassword />} />
-              
-              {/* Dashboard Routes */}
-              <Route path="/dashboard" element={<DashboardLayout />}>
-                <Route index element={<Dashboard />} />
-                <Route path="profile" element={<Profile />} />
-                <Route path="verifikasi-mitra" element={<VerifikasiMitra />} />
-                <Route path="verifikasi-mitra/:id" element={<DetailMitra />} />
-                <Route path="mitra" element={<DaftarMitra />} />
-                <Route path="mitra/:id" element={<DetailMitra />} />
-                <Route path="mitra-kendaraan" element={<KendaraanMitra />} />
-                <Route path="mitra-kendaraan/:id" element={<DetailKendaraanMitra />} />
-                <Route path="mitra-blokir" element={<BlokirMitra />} />
-                <Route path="verifikasi-costumer" element={<VerifikasiCustomer />} />
-                <Route path="verifikasi-costumer/:id" element={<DetailCustomer />} />
-                <Route path="costumer" element={<DaftarCustomer />} />
-                <Route path="costumer/:id" element={<DetailCustomer />} />
-                <Route path="costumer-blokir" element={<BlokirCustomer />} />
-                <Route path="pesanan" element={<Pesanan />} />
-                <Route path="pesanan/:id" element={<DetailPesanan />} />
-              </Route>
-              
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
+          <PesananProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
+                
+                {/* Dashboard Routes */}
+                <Route path="/dashboard" element={<DashboardLayout />}>
+                  <Route index element={<Dashboard />} />
+                  <Route path="profile" element={<Profile />} />
+                  <Route path="verifikasi-mitra" element={<VerifikasiMitra />} />
+                  <Route path="verifikasi-mitra/:id" element={<DetailMitra />} />
+                  <Route path="mitra" element={<DaftarMitra />} />
+                  <Route path="mitra/:id" element={<DetailMitra />} />
+                  <Route path="mitra-kendaraan" element={<KendaraanMitra />} />
+                  <Route path="mitra-kendaraan/:id" element={<DetailKendaraanMitra />} />
+                  <Route path="mitra-blokir" element={<BlokirMitra />} />
+                  <Route path="verifikasi-costumer" element={<VerifikasiCustomer />} />
+                  <Route path="verifikasi-costumer/:id" element={<DetailCustomer />} />
+                  <Route path="costumer" element={<DaftarCustomer />} />
+                  <Route path="costumer/:id" element={<DetailCustomer />} />
+                  <Route path="costumer-blokir" element={<BlokirCustomer />} />
+                  <Route path="pesanan" element={<Pesanan />} />
+                  <Route path="pesanan/:id" element={<DetailPesanan />} />
+                </Route>
+                
+                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </BrowserRouter>
+          </PesananProvider>
         </CustomerProvider>
       </MitraProvider>
     </TooltipProvider>
