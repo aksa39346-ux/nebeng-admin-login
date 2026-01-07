@@ -77,7 +77,7 @@ const DetailRefund = () => {
   const statusConfig = getStatusConfig(refund.status);
 
   return (
-    <div className="flex items-center justify-center min-h-[calc(100vh-120px)] bg-[#6366f1] p-4">
+    <div className="flex items-center justify-center min-h-[calc(100vh-120px)] bg-background p-4">
       <Card className="w-full max-w-md bg-white rounded-2xl overflow-hidden shadow-xl">
         {/* Header */}
         <div className="text-center pt-8 pb-6 px-6">
