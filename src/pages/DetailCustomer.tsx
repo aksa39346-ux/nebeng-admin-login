@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ChevronLeft, Calendar, Edit, Check, X, CheckCircle } from "lucide-react";
+import { ChevronLeft, Calendar, Edit, Check, X, CheckCircle, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -43,7 +43,9 @@ const DetailCustomer = () => {
     noTlp: "",
   });
   
-  // Success modal states
+  // Modal states
+  const [showConfirmTerima, setShowConfirmTerima] = useState(false);
+  const [showConfirmTolak, setShowConfirmTolak] = useState(false);
   const [showTerimaModal, setShowTerimaModal] = useState(false);
   const [showTolakModal, setShowTolakModal] = useState(false);
   const [showEditSuccessModal, setShowEditSuccessModal] = useState(false);
@@ -95,15 +97,25 @@ const DetailCustomer = () => {
     setEditData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleTerima = () => {
+  const handleTerimaClick = () => {
+    setShowConfirmTerima(true);
+  };
+
+  const handleTolakClick = () => {
+    setShowConfirmTolak(true);
+  };
+
+  const handleConfirmTerima = () => {
     if (!id) return;
     updateCustomerStatus(id, "TERVERIFIKASI");
+    setShowConfirmTerima(false);
     setShowTerimaModal(true);
   };
 
-  const handleTolak = () => {
+  const handleConfirmTolak = () => {
     if (!id) return;
     updateCustomerStatus(id, "DITOLAK");
+    setShowConfirmTolak(false);
     setShowTolakModal(true);
   };
 
@@ -316,19 +328,93 @@ const DetailCustomer = () => {
         <div className="mt-8 flex gap-4">
           <Button 
             className="bg-primary hover:bg-primary/90 text-primary-foreground px-8"
-            onClick={handleTerima}
+            onClick={handleTerimaClick}
           >
             Terima
           </Button>
           <Button 
             variant="outline"
             className="border-red-500 text-red-500 hover:bg-red-50 px-8"
-            onClick={handleTolak}
+            onClick={handleTolakClick}
           >
             Tolak
           </Button>
         </div>
       </div>
+
+      {/* Modal: Konfirmasi Terima */}
+      <Dialog open={showConfirmTerima} onOpenChange={setShowConfirmTerima}>
+        <DialogContent className="sm:max-w-md text-center">
+          <div className="flex flex-col items-center py-4">
+            <h2 className="text-lg font-semibold mb-2">
+              Anda akan Menerima verifikasi customer ini.
+            </h2>
+            <p className="text-muted-foreground mb-6">Apakah Anda yakin?</p>
+            <div className="relative mb-6">
+              <div className="w-20 h-24 bg-muted rounded-lg flex items-center justify-center">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-muted-foreground">
+                  <path d="M9 12h6M9 16h6M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z" />
+                </svg>
+              </div>
+              <div className="absolute -bottom-2 -right-2 bg-green-500 rounded-full p-1">
+                <CheckCircle size={20} className="text-white" />
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <Button 
+                variant="outline" 
+                onClick={() => setShowConfirmTerima(false)}
+                className="min-w-24"
+              >
+                Kembali
+              </Button>
+              <Button 
+                className="min-w-24 bg-primary hover:bg-primary/90"
+                onClick={handleConfirmTerima}
+              >
+                Ya.
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal: Konfirmasi Tolak */}
+      <Dialog open={showConfirmTolak} onOpenChange={setShowConfirmTolak}>
+        <DialogContent className="sm:max-w-md text-center">
+          <div className="flex flex-col items-center py-4">
+            <h2 className="text-lg font-semibold mb-2">
+              Anda akan Menolak verifikasi customer ini.
+            </h2>
+            <p className="text-muted-foreground mb-6">Apakah Anda yakin?</p>
+            <div className="relative mb-6">
+              <div className="w-20 h-24 bg-muted rounded-lg flex items-center justify-center">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-muted-foreground">
+                  <path d="M9 12h6M9 16h6M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z" />
+                </svg>
+              </div>
+              <div className="absolute -bottom-2 -right-2 bg-red-500 rounded-full p-1">
+                <XCircle size={20} className="text-white" />
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <Button 
+                variant="outline" 
+                onClick={() => setShowConfirmTolak(false)}
+                className="min-w-24"
+              >
+                Kembali
+              </Button>
+              <Button 
+                className="min-w-24 bg-red-500 hover:bg-red-600"
+                onClick={handleConfirmTolak}
+              >
+                Ya.
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Terima Success Modal */}
       <Dialog open={showTerimaModal} onOpenChange={setShowTerimaModal}>
