@@ -21,6 +21,7 @@ import DaftarCustomer from "./pages/DaftarCustomer";
 import DetailCustomer from "./pages/DetailCustomer";
 import BlokirCustomer from "./pages/BlokirCustomer";
 import Pesanan from "./pages/Pesanan";
+import DetailPesanan from "./pages/DetailPesanan";
 import { MitraProvider } from "./contexts/MitraContext";
 import { CustomerProvider } from "./contexts/CustomerContext";
 
@@ -56,6 +57,7 @@ const App = () => (
                 <Route path="costumer/:id" element={<DetailCustomer />} />
                 <Route path="costumer-blokir" element={<BlokirCustomer />} />
                 <Route path="pesanan" element={<Pesanan />} />
+                <Route path="pesanan/:id" element={<DetailPesanan />} />
               </Route>
               
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
