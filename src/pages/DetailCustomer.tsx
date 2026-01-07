@@ -47,6 +47,7 @@ const DetailCustomer = () => {
   const [showTerimaModal, setShowTerimaModal] = useState(false);
   const [showTolakModal, setShowTolakModal] = useState(false);
   const [showEditSuccessModal, setShowEditSuccessModal] = useState(false);
+  const [showKTPPreview, setShowKTPPreview] = useState(false);
   
   if (!customer) {
     return (
@@ -304,7 +305,8 @@ const DetailCustomer = () => {
               <img 
                 src={ktpPlaceholder} 
                 alt={`KTP ${customer.informasiKTP?.namaLengkap || customer.nama}`}
-                className="w-48 h-auto rounded-lg border-2 border-blue-200 shadow-md object-cover"
+                className="w-48 h-auto rounded-lg border-2 border-blue-200 shadow-md object-cover cursor-pointer hover:opacity-90 hover:shadow-lg transition-all"
+                onClick={() => setShowKTPPreview(true)}
               />
             </div>
           </div>
@@ -411,6 +413,23 @@ const DetailCustomer = () => {
             >
               Oke
             </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* KTP Preview Modal */}
+      <Dialog open={showKTPPreview} onOpenChange={setShowKTPPreview}>
+        <DialogContent className="sm:max-w-2xl p-4">
+          <div className="flex flex-col items-center">
+            <h3 className="text-lg font-semibold mb-4">Preview KTP</h3>
+            <img 
+              src={ktpPlaceholder} 
+              alt={`KTP ${customer.informasiKTP?.namaLengkap || customer.nama}`}
+              className="w-full max-w-lg h-auto rounded-lg border-2 border-blue-200 shadow-lg"
+            />
+            <p className="mt-4 text-sm text-muted-foreground">
+              {customer.informasiKTP?.namaLengkap || customer.nama} - NIK: {customer.informasiKTP?.nik || "-"}
+            </p>
           </div>
         </DialogContent>
       </Dialog>
