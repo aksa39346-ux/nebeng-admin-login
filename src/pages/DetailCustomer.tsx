@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ChevronLeft, Calendar, Edit, Check, X } from "lucide-react";
+import { ChevronLeft, Calendar, Edit, Check, X, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -332,26 +332,30 @@ const DetailCustomer = () => {
 
       {/* Terima Success Modal */}
       <Dialog open={showTerimaModal} onOpenChange={setShowTerimaModal}>
-        <DialogContent className="sm:max-w-md p-0 border-0 overflow-hidden">
-          <div className="h-1.5 bg-green-500" />
-          <div className="p-8 flex flex-col items-center text-center">
-            <h2 className="text-xl font-bold text-foreground mb-6">
-              Customer Berhasil Diterima
+        <DialogContent className="sm:max-w-md text-center">
+          <div className="flex flex-col items-center py-4">
+            <h2 className="text-lg font-semibold mb-2">
+              Anda telah berhasil memverifikasi customer.
             </h2>
-            
-            <div className="mb-8">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
-                <svg viewBox="0 0 24 24" className="w-8 h-8 text-green-500" fill="none" stroke="currentColor" strokeWidth="3">
-                  <path d="M5 12l5 5L19 7" strokeLinecap="round" strokeLinejoin="round"/>
+            <p className="text-muted-foreground mb-6">Semua data sudah diperbarui.</p>
+            <div className="relative mb-6">
+              <div className="w-20 h-24 bg-blue-100 rounded-lg flex items-center justify-center">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" className="text-primary">
+                  <circle cx="9" cy="7" r="4" stroke="currentColor" strokeWidth="2" />
+                  <path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2" stroke="currentColor" strokeWidth="2" />
+                  <rect x="12" y="8" width="8" height="10" rx="1" stroke="currentColor" strokeWidth="1.5" fill="white" />
+                  <path d="M14 11h4M14 13h4M14 15h2" stroke="currentColor" strokeWidth="1" />
                 </svg>
               </div>
+              <div className="absolute -bottom-1 -right-1 bg-green-500 rounded-full p-0.5">
+                <CheckCircle size={18} className="text-white" />
+              </div>
             </div>
-            
             <Button 
-              className="px-8 bg-primary hover:bg-primary/90 text-primary-foreground"
+              className="min-w-24"
               onClick={() => {
                 setShowTerimaModal(false);
-                navigate(-1);
+                navigate("/dashboard/verifikasi-costumer");
               }}
             >
               Oke
@@ -362,26 +366,27 @@ const DetailCustomer = () => {
 
       {/* Tolak Modal */}
       <Dialog open={showTolakModal} onOpenChange={setShowTolakModal}>
-        <DialogContent className="sm:max-w-md p-0 border-0 overflow-hidden">
-          <div className="h-1.5 bg-red-500" />
-          <div className="p-8 flex flex-col items-center text-center">
-            <h2 className="text-xl font-bold text-foreground mb-6">
-              Customer Ditolak
+        <DialogContent className="sm:max-w-md text-center">
+          <div className="flex flex-col items-center py-4">
+            <h2 className="text-lg font-semibold mb-6">
+              Anda telah menolak verifikasi customer
             </h2>
-            
-            <div className="mb-8">
+            <div className="relative mb-6">
               <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
-                <svg viewBox="0 0 24 24" className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" strokeWidth="3">
-                  <path d="M6 18L18 6M6 6l12 12" strokeLinecap="round" strokeLinejoin="round"/>
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none">
+                  <circle cx="12" cy="12" r="10" stroke="hsl(var(--destructive))" strokeWidth="2" />
+                  <path d="M8 8l8 8M16 8l-8 8" stroke="hsl(var(--destructive))" strokeWidth="2" strokeLinecap="round" />
                 </svg>
               </div>
+              <div className="absolute -top-1 -right-1 bg-red-500 text-white text-[8px] font-bold px-1 rounded transform rotate-12">
+                CANCELLED
+              </div>
             </div>
-            
             <Button 
-              className="px-8 bg-primary hover:bg-primary/90 text-primary-foreground"
+              className="min-w-24"
               onClick={() => {
                 setShowTolakModal(false);
-                navigate(-1);
+                navigate("/dashboard/verifikasi-costumer");
               }}
             >
               Oke
@@ -392,23 +397,26 @@ const DetailCustomer = () => {
 
       {/* Edit Success Modal */}
       <Dialog open={showEditSuccessModal} onOpenChange={setShowEditSuccessModal}>
-        <DialogContent className="sm:max-w-md p-0 border-0 overflow-hidden">
-          <div className="h-1.5 bg-primary" />
-          <div className="p-8 flex flex-col items-center text-center">
-            <h2 className="text-xl font-bold text-foreground mb-6">
-              Data Customer Berhasil Diperbarui
+        <DialogContent className="sm:max-w-md text-center">
+          <div className="flex flex-col items-center py-4">
+            <h2 className="text-lg font-semibold mb-6">
+              Data terbaru berhasil disimpan
             </h2>
-            
-            <div className="mb-8">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
-                <svg viewBox="0 0 24 24" className="w-8 h-8 text-green-500" fill="none" stroke="currentColor" strokeWidth="3">
-                  <path d="M5 12l5 5L19 7" strokeLinecap="round" strokeLinejoin="round"/>
+            <div className="relative mb-6">
+              <div className="w-20 h-24 bg-blue-100 rounded-lg flex items-center justify-center">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" className="text-primary">
+                  <circle cx="9" cy="7" r="4" stroke="currentColor" strokeWidth="2" />
+                  <path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2" stroke="currentColor" strokeWidth="2" />
+                  <rect x="12" y="8" width="8" height="10" rx="1" stroke="currentColor" strokeWidth="1.5" fill="white" />
+                  <path d="M14 11h4M14 13h4M14 15h2" stroke="currentColor" strokeWidth="1" />
                 </svg>
               </div>
+              <div className="absolute -bottom-1 -right-1 bg-green-500 rounded-full p-0.5">
+                <CheckCircle size={18} className="text-white" />
+              </div>
             </div>
-            
             <Button 
-              className="px-8 bg-primary hover:bg-primary/90 text-primary-foreground"
+              className="min-w-24"
               onClick={() => setShowEditSuccessModal(false)}
             >
               Oke
