@@ -6,231 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-
-// Sample data for the detail view
-const pesananDetailData: Record<string, {
-  id: string;
-  idPesanan: string;
-  status: "PROSES" | "SELESAI" | "BATAL";
-  customer: {
-    nama: string;
-    namaLengkap: string;
-    noTlp: string;
-    catatan: string;
-  };
-  mitra: {
-    nama: string;
-    kode: string;
-    namaLengkap: string;
-    noTlp: string;
-    kendaraan: string;
-    merkKendaraan: string;
-    platNomor: string;
-  };
-  perjalanan: {
-    tanggal: string;
-    jarak: string;
-    durasi: string;
-    titikJemput: {
-      lokasi: string;
-      waktu: string;
-      alamat: string;
-    };
-    tujuan: {
-      lokasi: string;
-      waktu: string;
-      alamat: string;
-    };
-  };
-  pembayaran: {
-    type: string;
-    tanggal: string;
-    idPesanan: string;
-    noTransaksi: string;
-    biayaPenebeng: number;
-    biayaAdmin: number;
-    total: number;
-  };
-}> = {
-  "P001": {
-    id: "P001",
-    idPesanan: "NEBENG-A9823818734710",
-    status: "PROSES",
-    customer: {
-      nama: "Clara Aulia",
-      namaLengkap: "Muhammad Abdul Kadir",
-      noTlp: "089373933994",
-      catatan: "Jika sudah di titik, maju lagi sedikit yah mas.",
-    },
-    mitra: {
-      nama: "Muhammad Abdul",
-      kode: "001235",
-      namaLengkap: "Muhammad Abdul Kadir",
-      noTlp: "080373933994",
-      kendaraan: "Mobil",
-      merkKendaraan: "TOYOTA",
-      platNomor: "B 4949 MBH",
-    },
-    perjalanan: {
-      tanggal: "Rabu, 20.30.2024",
-      jarak: "14 km",
-      durasi: "14 menit",
-      titikJemput: {
-        lokasi: "Yogyakarta",
-        waktu: "09.30 WIB",
-        alamat: "Alun-alun Yogyakarta",
-      },
-      tujuan: {
-        lokasi: "Purwokerto",
-        waktu: "09.30 WIB",
-        alamat: "Alun-alun Purwokerto",
-      },
-    },
-    pembayaran: {
-      type: "QRIS",
-      tanggal: "10/02/2009",
-      idPesanan: "NEBENG-98299A",
-      noTransaksi: "INV/20258104/123456789",
-      biayaPenebeng: 50000,
-      biayaAdmin: 15000,
-      total: 65000,
-    },
-  },
-  "P002": {
-    id: "P002",
-    idPesanan: "NEBENG-A9823818734710",
-    status: "SELESAI",
-    customer: {
-      nama: "Clara Aulia",
-      namaLengkap: "Muhammad Abdul Kadir",
-      noTlp: "089373933994",
-      catatan: "Jika sudah di titik, maju lagi sedikit yah mas.",
-    },
-    mitra: {
-      nama: "Muhammad Abdul",
-      kode: "001235",
-      namaLengkap: "Muhammad Abdul Kadir",
-      noTlp: "080373933994",
-      kendaraan: "Mobil",
-      merkKendaraan: "TOYOTA",
-      platNomor: "B 4949 MBH",
-    },
-    perjalanan: {
-      tanggal: "Rabu, 20.30.2024",
-      jarak: "14 km",
-      durasi: "14 menit",
-      titikJemput: {
-        lokasi: "Yogyakarta",
-        waktu: "09.30 WIB",
-        alamat: "Alun-alun Yogyakarta",
-      },
-      tujuan: {
-        lokasi: "Purwokerto",
-        waktu: "09.30 WIB",
-        alamat: "Alun-alun Purwokerto",
-      },
-    },
-    pembayaran: {
-      type: "QRIS",
-      tanggal: "10/02/2009",
-      idPesanan: "NEBENG-98299A",
-      noTransaksi: "INV/20258104/123456789",
-      biayaPenebeng: 50000,
-      biayaAdmin: 15000,
-      total: 65000,
-    },
-  },
-  "P006": {
-    id: "P006",
-    idPesanan: "NEBENG-A9823818734710",
-    status: "BATAL",
-    customer: {
-      nama: "Clara Aulia",
-      namaLengkap: "Muhammad Abdul Kadir",
-      noTlp: "089373933994",
-      catatan: "Jika sudah di titik, maju lagi sedikit yah mas.",
-    },
-    mitra: {
-      nama: "Muhammad Abdul",
-      kode: "001235",
-      namaLengkap: "Muhammad Abdul Kadir",
-      noTlp: "080373933994",
-      kendaraan: "Mobil",
-      merkKendaraan: "TOYOTA",
-      platNomor: "B 4949 MBH",
-    },
-    perjalanan: {
-      tanggal: "Rabu, 20.30.2024",
-      jarak: "14 km",
-      durasi: "14 menit",
-      titikJemput: {
-        lokasi: "Yogyakarta",
-        waktu: "09.30 WIB",
-        alamat: "Alun-alun Yogyakarta",
-      },
-      tujuan: {
-        lokasi: "Purwokerto",
-        waktu: "09.30 WIB",
-        alamat: "Alun-alun Purwokerto",
-      },
-    },
-    pembayaran: {
-      type: "QRIS",
-      tanggal: "10/02/2009",
-      idPesanan: "NEBENG-98299A",
-      noTransaksi: "INV/20258104/123456789",
-      biayaPenebeng: 50000,
-      biayaAdmin: 15000,
-      total: 65000,
-    },
-  },
-};
-
-// Default data for orders not in the sample
-const defaultPesananDetail = {
-  id: "P000",
-  idPesanan: "NEBENG-A9823818734710",
-  status: "PROSES" as const,
-  customer: {
-    nama: "Clara Aulia",
-    namaLengkap: "Muhammad Abdul Kadir",
-    noTlp: "089373933994",
-    catatan: "Jika sudah di titik, maju lagi sedikit yah mas.",
-  },
-  mitra: {
-    nama: "Muhammad Abdul",
-    kode: "001235",
-    namaLengkap: "Muhammad Abdul Kadir",
-    noTlp: "080373933994",
-    kendaraan: "Mobil",
-    merkKendaraan: "TOYOTA",
-    platNomor: "B 4949 MBH",
-  },
-  perjalanan: {
-    tanggal: "Rabu, 20.30.2024",
-    jarak: "14 km",
-    durasi: "14 menit",
-    titikJemput: {
-      lokasi: "Yogyakarta",
-      waktu: "09.30 WIB",
-      alamat: "Alun-alun Yogyakarta",
-    },
-    tujuan: {
-      lokasi: "Purwokerto",
-      waktu: "09.30 WIB",
-      alamat: "Alun-alun Purwokerto",
-    },
-  },
-  pembayaran: {
-    type: "QRIS",
-    tanggal: "10/02/2009",
-    idPesanan: "NEBENG-98299A",
-    noTransaksi: "INV/20258104/123456789",
-    biayaPenebeng: 50000,
-    biayaAdmin: 15000,
-    total: 65000,
-  },
-};
+import { usePesanan } from "@/contexts/PesananContext";
 
 const getStatusBadge = (status: string) => {
   switch (status) {
@@ -257,9 +33,18 @@ const DetailPesanan = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { getPesananDetail } = usePesanan();
 
-  // Get data based on id or use default
-  const data = id && pesananDetailData[id] ? pesananDetailData[id] : defaultPesananDetail;
+  // Get data based on id
+  const data = id ? getPesananDetail(id) : undefined;
+
+  if (!data) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <p className="text-muted-foreground">Data pesanan tidak ditemukan</p>
+      </div>
+    );
+  }
 
   const handleCopyId = () => {
     navigator.clipboard.writeText(data.idPesanan);
