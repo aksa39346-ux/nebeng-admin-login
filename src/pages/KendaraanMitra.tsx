@@ -252,7 +252,7 @@ const KendaraanMitra = () => {
                             variant="ghost" 
                             size="icon" 
                             className="h-8 w-8 bg-orange-500 hover:bg-orange-600"
-                            onClick={() => {}}
+                            onClick={() => navigate(`/dashboard/mitra-kendaraan/${kendaraan.id}?edit=true`)}
                           >
                             <Edit size={18} className="text-white" />
                           </Button>
