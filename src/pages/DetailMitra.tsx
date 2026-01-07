@@ -11,13 +11,13 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-// Dummy data dengan 3 status berbeda
+// Dummy data dengan berbagai status
 const mitraDetailData: Record<string, {
   id: string;
   nama: string;
   layanan: string;
   kode: string;
-  status: "PENGAJUAN" | "TERVERIFIKASI" | "DITOLAK";
+  status: "PENGAJUAN" | "TERVERIFIKASI" | "DITOLAK" | "DIBLOCK";
   informasiPribadi: {
     namaLengkap: string;
     email: string;
@@ -128,6 +128,35 @@ const mitraDetailData: Record<string, {
       fotoSIM: "/placeholder.svg",
     },
   },
+  "100004": {
+    id: "100004",
+    nama: "Dewi Kartika",
+    layanan: "Nebeng Motor",
+    kode: "001238",
+    status: "DIBLOCK",
+    informasiPribadi: {
+      namaLengkap: "Dewi Kartika Sari",
+      email: "dewi.k@gmail.com",
+      tempatLahir: "Surabaya",
+      tanggalLahir: "10-03-1994",
+      jenisKelamin: "Perempuan",
+      noTlp: "083456789012",
+    },
+    informasiKTP: {
+      namaLengkap: "Dewi Kartika Sari",
+      nik: "3203456789000003",
+      jenisKelamin: "Perempuan",
+      tanggalLahir: "10-03-1994",
+      fotoKTP: "/placeholder.svg",
+    },
+    informasiSIM: {
+      namaLengkap: "Dewi Kartika Sari",
+      nomorSIM: "3456789012345678",
+      jenisKelamin: "Perempuan",
+      tanggalLahir: "10-03-1994",
+      fotoSIM: "/placeholder.svg",
+    },
+  },
 };
 
 const alasanPenolakan = [
@@ -148,7 +177,7 @@ const alasanPerubahan = [
   "Kesalahan penolakan sebelumnya",
 ];
 
-const getStatusBadge = (status: "PENGAJUAN" | "TERVERIFIKASI" | "DITOLAK") => {
+const getStatusBadge = (status: "PENGAJUAN" | "TERVERIFIKASI" | "DITOLAK" | "DIBLOCK") => {
   switch (status) {
     case "PENGAJUAN":
       return <Badge className="bg-orange-500 hover:bg-orange-600 text-white text-xs">Pengajuan</Badge>;
@@ -156,6 +185,8 @@ const getStatusBadge = (status: "PENGAJUAN" | "TERVERIFIKASI" | "DITOLAK") => {
       return <Badge className="bg-green-500 hover:bg-green-600 text-white text-xs">Terverifikasi</Badge>;
     case "DITOLAK":
       return <Badge className="bg-red-500 hover:bg-red-600 text-white text-xs">Ditolak</Badge>;
+    case "DIBLOCK":
+      return <Badge className="bg-gray-500 hover:bg-gray-600 text-white text-xs">Diblock</Badge>;
     default:
       return null;
   }
@@ -167,13 +198,16 @@ const DetailMitra = () => {
   
   const mitra = id ? mitraDetailData[id] : null;
   
-  const [status, setStatus] = useState<"PENGAJUAN" | "TERVERIFIKASI" | "DITOLAK">(
+  const [status, setStatus] = useState<"PENGAJUAN" | "TERVERIFIKASI" | "DITOLAK" | "DIBLOCK">(
     mitra?.status || "PENGAJUAN"
   );
   
+  // Check if mitra is blocked
+  const isBlocked = status === "DIBLOCK";
+  
   // Edit mode state
   const [isEditMode, setIsEditMode] = useState(false);
-  const [editStatus, setEditStatus] = useState<"PENGAJUAN" | "TERVERIFIKASI" | "DITOLAK">(status);
+  const [editStatus, setEditStatus] = useState<"PENGAJUAN" | "TERVERIFIKASI" | "DITOLAK" | "DIBLOCK">(status);
   
   // Modal states
   const [showConfirmTolak, setShowConfirmTolak] = useState(false);
@@ -293,7 +327,7 @@ const DetailMitra = () => {
               </div>
               <div className="mt-2">
                 {isEditMode ? (
-                  <Select value={editStatus} onValueChange={(val) => setEditStatus(val as "PENGAJUAN" | "TERVERIFIKASI" | "DITOLAK")}>
+                  <Select value={editStatus} onValueChange={(val) => setEditStatus(val as "PENGAJUAN" | "TERVERIFIKASI" | "DITOLAK" | "DIBLOCK")}>
                     <SelectTrigger className="w-40 h-8">
                       <SelectValue />
                     </SelectTrigger>
@@ -310,7 +344,12 @@ const DetailMitra = () => {
                     </SelectContent>
                   </Select>
                 ) : (
-                  getStatusBadge(status)
+                  <div className="flex items-center gap-2">
+                    {getStatusBadge(status)}
+                    {isBlocked && (
+                      <span className="text-xs text-muted-foreground">(Status tidak dapat diubah)</span>
+                    )}
+                  </div>
                 )}
               </div>
             </div>
@@ -328,6 +367,7 @@ const DetailMitra = () => {
                 variant="outline" 
                 className="gap-2"
                 onClick={handleEnterEditMode}
+                disabled={isBlocked}
               >
                 <span>Edit</span>
                 <Edit size={16} />
