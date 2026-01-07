@@ -83,8 +83,8 @@ const Index = () => {
             Selamat Datang
           </h1>
           <p className="text-white/70 text-sm max-w-md leading-relaxed">
-            Lorem Ipsum is simply dummy text of the printing and typesetting industry.
-            Lorem Ipsum has been the industry's standard dummy text ever since the 1500s.
+            Kelola Nebeng lebih cepat dan terorganisir.
+            Login untuk melanjutkan ke dashboard admin.
           </p>
         </div>
 
