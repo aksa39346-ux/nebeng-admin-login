@@ -15,6 +15,7 @@ import DetailMitra from "./pages/DetailMitra";
 import DaftarMitra from "./pages/DaftarMitra";
 import KendaraanMitra from "./pages/KendaraanMitra";
 import DetailKendaraanMitra from "./pages/DetailKendaraanMitra";
+import BlokirMitra from "./pages/BlokirMitra";
 import VerifikasiCustomer from "./pages/VerifikasiCustomer";
 import DetailCustomer from "./pages/DetailCustomer";
 import { MitraProvider } from "./contexts/MitraContext";
@@ -45,6 +46,7 @@ const App = () => (
                 <Route path="mitra/:id" element={<DetailMitra />} />
                 <Route path="mitra-kendaraan" element={<KendaraanMitra />} />
                 <Route path="mitra-kendaraan/:id" element={<DetailKendaraanMitra />} />
+                <Route path="mitra-blokir" element={<BlokirMitra />} />
                 <Route path="verifikasi-costumer" element={<VerifikasiCustomer />} />
                 <Route path="verifikasi-costumer/:id" element={<DetailCustomer />} />
               </Route>
