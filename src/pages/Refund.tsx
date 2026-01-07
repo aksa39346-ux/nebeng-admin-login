@@ -21,48 +21,44 @@ import {
 
 interface RefundData {
   id: string;
-  noRefund: string;
-  namaCustomer: string;
   noOrder: string;
+  namaCustomer: string;
+  namaDriver: string;
   tanggal: Date;
-  alasan: string;
-  jumlah: number;
-  status: "PENDING" | "DISETUJUI" | "DITOLAK";
+  noTransaksi: string;
+  jumlahRefund: number;
+  status: "PROSES" | "SELESAI" | "BATAL";
 }
 
 // Sample data
 const initialRefundList: RefundData[] = [
-  { id: "R001", noRefund: "REF001", namaCustomer: "Clara Aulia", noOrder: "0091", tanggal: new Date(2023, 9, 18), alasan: "Driver tidak datang", jumlah: 60000, status: "PENDING" },
-  { id: "R002", noRefund: "REF002", namaCustomer: "Budi Santoso", noOrder: "0092", tanggal: new Date(2023, 9, 19), alasan: "Kesalahan sistem", jumlah: 55000, status: "DISETUJUI" },
-  { id: "R003", noRefund: "REF003", namaCustomer: "Dewi Kartika", noOrder: "0093", tanggal: new Date(2023, 9, 20), alasan: "Double booking", jumlah: 120000, status: "DISETUJUI" },
-  { id: "R004", noRefund: "REF004", namaCustomer: "Rina Wati", noOrder: "0094", tanggal: new Date(2023, 9, 21), alasan: "Pembatalan oleh mitra", jumlah: 45000, status: "DITOLAK" },
-  { id: "R005", noRefund: "REF005", namaCustomer: "Agus Setiawan", noOrder: "0095", tanggal: new Date(2023, 9, 22), alasan: "Keterlambatan lebih dari 30 menit", jumlah: 35000, status: "PENDING" },
-  { id: "R006", noRefund: "REF006", namaCustomer: "Siti Nurhaliza", noOrder: "0096", tanggal: new Date(2023, 9, 23), alasan: "Kendaraan tidak sesuai", jumlah: 50000, status: "PENDING" },
-  { id: "R007", noRefund: "REF007", namaCustomer: "Rudi Hermawan", noOrder: "0097", tanggal: new Date(2023, 9, 24), alasan: "Driver membatalkan", jumlah: 65000, status: "DISETUJUI" },
-  { id: "R008", noRefund: "REF008", namaCustomer: "Linda Kusuma", noOrder: "0098", tanggal: new Date(2023, 9, 25), alasan: "Alasan tidak valid", jumlah: 150000, status: "DITOLAK" },
-  { id: "R009", noRefund: "REF009", namaCustomer: "Andi Pratama", noOrder: "0099", tanggal: new Date(2023, 9, 26), alasan: "Kesalahan pembayaran", jumlah: 40000, status: "PENDING" },
-  { id: "R010", noRefund: "REF010", namaCustomer: "Maya Sari", noOrder: "0100", tanggal: new Date(2023, 9, 27), alasan: "Perubahan rute mendadak", jumlah: 70000, status: "DISETUJUI" },
+  { id: "R001", noOrder: "0091", namaCustomer: "Muhammda Abdul", namaDriver: "Maulana Injil", tanggal: new Date(2023, 9, 17), noTransaksi: "INV-123456789", jumlahRefund: 60000, status: "PROSES" },
+  { id: "R002", noOrder: "0091", namaCustomer: "Muhammda Abdul", namaDriver: "Maulana Injil", tanggal: new Date(2023, 9, 17), noTransaksi: "INV-123456789", jumlahRefund: 60000, status: "SELESAI" },
+  { id: "R003", noOrder: "0091", namaCustomer: "Muhammda Abdul", namaDriver: "Maulana Injil", tanggal: new Date(2023, 9, 17), noTransaksi: "INV-123456789", jumlahRefund: 60000, status: "SELESAI" },
+  { id: "R004", noOrder: "0091", namaCustomer: "Muhammda Abdul", namaDriver: "Maulana Injil", tanggal: new Date(2023, 9, 17), noTransaksi: "INV-123456789", jumlahRefund: 60000, status: "SELESAI" },
+  { id: "R005", noOrder: "0091", namaCustomer: "Muhammda Abdul", namaDriver: "Maulana Injil", tanggal: new Date(2023, 9, 17), noTransaksi: "INV-123456789", jumlahRefund: 60000, status: "PROSES" },
+  { id: "R006", noOrder: "0091", namaCustomer: "Muhammda Abdul", namaDriver: "Maulana Injil", tanggal: new Date(2023, 9, 17), noTransaksi: "INV-123456789", jumlahRefund: 60000, status: "BATAL" },
+  { id: "R007", noOrder: "0091", namaCustomer: "Muhammda Abdul", namaDriver: "Maulana Injil", tanggal: new Date(2023, 9, 17), noTransaksi: "INV-123456789", jumlahRefund: 60000, status: "BATAL" },
+  { id: "R008", noOrder: "0091", namaCustomer: "Muhammda Abdul", namaDriver: "Maulana Injil", tanggal: new Date(2023, 9, 17), noTransaksi: "INV-123456789", jumlahRefund: 60000, status: "BATAL" },
+  { id: "R009", noOrder: "0091", namaCustomer: "Muhammda Abdul", namaDriver: "Maulana Injil", tanggal: new Date(2023, 9, 17), noTransaksi: "INV-123456789", jumlahRefund: 60000, status: "PROSES" },
+  { id: "R010", noOrder: "0091", namaCustomer: "Muhammda Abdul", namaDriver: "Maulana Injil", tanggal: new Date(2023, 9, 17), noTransaksi: "INV-123456789", jumlahRefund: 60000, status: "SELESAI" },
 ];
 
 const getStatusBadge = (status: string) => {
   switch (status) {
-    case "DISETUJUI":
-      return <Badge className="bg-green-500 hover:bg-green-600 text-white text-xs">DISETUJUI</Badge>;
-    case "DITOLAK":
-      return <Badge className="bg-red-500 hover:bg-red-600 text-white text-xs">DITOLAK</Badge>;
-    case "PENDING":
-      return <Badge className="bg-orange-500 hover:bg-orange-600 text-white text-xs">PENDING</Badge>;
+    case "SELESAI":
+      return <Badge className="bg-green-500 hover:bg-green-600 text-white text-xs px-3 py-1 rounded-full">SELESAI</Badge>;
+    case "BATAL":
+      return <Badge className="bg-orange-500 hover:bg-orange-600 text-white text-xs px-3 py-1 rounded-full">BATAL</Badge>;
+    case "PROSES":
+      return <Badge className="bg-yellow-500 hover:bg-yellow-600 text-white text-xs px-3 py-1 rounded-full">PROSES</Badge>;
     default:
-      return <Badge className="bg-gray-500 text-white text-xs">{status}</Badge>;
+      return <Badge className="bg-gray-500 text-white text-xs px-3 py-1 rounded-full">{status}</Badge>;
   }
 };
 
 const formatCurrency = (amount: number) => {
-  return new Intl.NumberFormat('id-ID', {
-    style: 'currency',
-    currency: 'IDR',
-    minimumFractionDigits: 0,
-  }).format(amount).replace('IDR', 'Rp');
+  return `Rp. ${amount.toLocaleString('id-ID')}.00`;
 };
 
 const Refund = () => {
@@ -79,9 +75,9 @@ const Refund = () => {
     return refundList.filter((refund) => {
       const matchesSearch = searchQuery === "" || 
         refund.namaCustomer.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        refund.noRefund.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        refund.namaDriver.toLowerCase().includes(searchQuery.toLowerCase()) ||
         refund.noOrder.includes(searchQuery) ||
-        refund.alasan.toLowerCase().includes(searchQuery.toLowerCase());
+        refund.noTransaksi.toLowerCase().includes(searchQuery.toLowerCase());
 
       const matchesDate = !selectedDate || 
         (refund.tanggal.getFullYear() === selectedDate.getFullYear() &&
@@ -129,12 +125,12 @@ const Refund = () => {
     }
 
     const excelData = dataToExport.map(refund => ({
-      "NO. REFUND": refund.noRefund,
-      "NAMA CUSTOMER": refund.namaCustomer,
       "NO. ORDER": refund.noOrder,
-      "TANGGAL": format(refund.tanggal, "dd MMM yyyy", { locale: localeId }),
-      "ALASAN": refund.alasan,
-      "JUMLAH": formatCurrency(refund.jumlah),
+      "NAMA COSTUMER": refund.namaCustomer,
+      "NAMA DRIVER": refund.namaDriver,
+      "TANGGAL": format(refund.tanggal, "EEEE, dd MMM yyyy", { locale: localeId }),
+      "NO. TRANSAKSI": refund.noTransaksi,
+      "JUMLAH REFUND": formatCurrency(refund.jumlahRefund),
       "STATUS": refund.status,
     }));
 
@@ -143,9 +139,9 @@ const Refund = () => {
     const columnWidths = [
       { wch: 12 },
       { wch: 20 },
-      { wch: 12 },
-      { wch: 15 },
-      { wch: 30 },
+      { wch: 20 },
+      { wch: 20 },
+      { wch: 18 },
       { wch: 15 },
       { wch: 12 },
     ];
@@ -178,7 +174,7 @@ const Refund = () => {
     <div className="space-y-6">
       <Card className="shadow-sm">
         <CardHeader className="pb-4">
-          <CardTitle className="text-xl font-semibold">Daftar Refund</CardTitle>
+          <CardTitle className="text-xl font-semibold">Daftar Pesanan</CardTitle>
         </CardHeader>
         <CardContent>
           {/* Filters */}
@@ -199,10 +195,10 @@ const Refund = () => {
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="SEMUA">Semua</SelectItem>
-                  <SelectItem value="PENDING">Pending</SelectItem>
-                  <SelectItem value="DISETUJUI">Disetujui</SelectItem>
-                  <SelectItem value="DITOLAK">Ditolak</SelectItem>
+                  <SelectItem value="SEMUA">Status</SelectItem>
+                  <SelectItem value="PROSES">Proses</SelectItem>
+                  <SelectItem value="SELESAI">Selesai</SelectItem>
+                  <SelectItem value="BATAL">Batal</SelectItem>
                 </SelectContent>
               </Select>
 
@@ -235,7 +231,7 @@ const Refund = () => {
                   )}
                 </PopoverContent>
               </Popover>
-              <Button className="gap-2 bg-primary" onClick={handleDownload} disabled={filteredData.length === 0}>
+              <Button className="gap-2 bg-[#22c55e] hover:bg-[#16a34a] text-white" onClick={handleDownload} disabled={filteredData.length === 0}>
                 <Download size={18} />
                 Download
               </Button>
@@ -247,12 +243,12 @@ const Refund = () => {
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-[#1e3a5f] text-white">
-                  <th className="text-left py-3 px-4 font-medium rounded-tl-lg">NO. REFUND</th>
-                  <th className="text-left py-3 px-4 font-medium">NAMA CUSTOMER</th>
-                  <th className="text-left py-3 px-4 font-medium">NO. ORDER</th>
+                  <th className="text-left py-3 px-4 font-medium rounded-tl-lg">NO. ORDER</th>
+                  <th className="text-left py-3 px-4 font-medium">NAMA COSTUMER</th>
+                  <th className="text-left py-3 px-4 font-medium">NAMA DRIVER</th>
                   <th className="text-left py-3 px-4 font-medium">TANGGAL</th>
-                  <th className="text-left py-3 px-4 font-medium">ALASAN</th>
-                  <th className="text-left py-3 px-4 font-medium">JUMLAH</th>
+                  <th className="text-left py-3 px-4 font-medium">NO. TRANSAKSI</th>
+                  <th className="text-left py-3 px-4 font-medium">JUMLAH REFUND</th>
                   <th className="text-center py-3 px-4 font-medium">STATUS</th>
                   <th className="text-center py-3 px-4 font-medium rounded-tr-lg">AKSI</th>
                 </tr>
@@ -261,14 +257,14 @@ const Refund = () => {
                 {paginatedData.length > 0 ? (
                   paginatedData.map((refund, index) => (
                     <tr key={index} className="border-b border-border/50 hover:bg-muted/30">
-                      <td className="py-4 px-4">{refund.noRefund}</td>
-                      <td className="py-4 px-4">{refund.namaCustomer}</td>
                       <td className="py-4 px-4">{refund.noOrder}</td>
+                      <td className="py-4 px-4">{refund.namaCustomer}</td>
+                      <td className="py-4 px-4">{refund.namaDriver}</td>
                       <td className="py-4 px-4">
-                        {format(refund.tanggal, "dd MMM yyyy", { locale: localeId })}
+                        {format(refund.tanggal, "EEEE, dd MMM yyyy", { locale: localeId })}
                       </td>
-                      <td className="py-4 px-4 max-w-[200px] truncate">{refund.alasan}</td>
-                      <td className="py-4 px-4">{formatCurrency(refund.jumlah)}</td>
+                      <td className="py-4 px-4">{refund.noTransaksi}</td>
+                      <td className="py-4 px-4">{formatCurrency(refund.jumlahRefund)}</td>
                       <td className="py-4 px-4 text-center">
                         {getStatusBadge(refund.status)}
                       </td>
@@ -277,10 +273,10 @@ const Refund = () => {
                           <Button 
                             variant="ghost" 
                             size="icon" 
-                            className="h-8 w-8 bg-[#1e3a5f] hover:bg-[#152a45]"
+                            className="h-8 w-8 bg-[#1e3a5f] hover:bg-[#152a45] rounded-full"
                             onClick={() => navigate(`/dashboard/refund/${refund.id}`)}
                           >
-                            <Eye size={18} className="text-white" />
+                            <Eye size={16} className="text-white" />
                           </Button>
                         </div>
                       </td>
