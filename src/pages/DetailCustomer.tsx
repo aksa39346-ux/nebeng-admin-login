@@ -11,12 +11,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import ktpPlaceholder from "@/assets/ktp-placeholder.png";
 
-const getStatusBadge = (status: "AKTIF" | "TIDAK_AKTIF" | "PENGAJUAN") => {
+const getStatusBadge = (status: "PENGAJUAN" | "TERVERIFIKASI" | "DITOLAK") => {
   switch (status) {
-    case "AKTIF":
-      return <Badge className="bg-green-500 hover:bg-green-600 text-white text-xs">Aktif</Badge>;
-    case "TIDAK_AKTIF":
-      return <Badge className="bg-gray-500 hover:bg-gray-600 text-white text-xs">Tidak Aktif</Badge>;
+    case "TERVERIFIKASI":
+      return <Badge className="bg-green-500 hover:bg-green-600 text-white text-xs">Terverifikasi</Badge>;
+    case "DITOLAK":
+      return <Badge className="bg-red-500 hover:bg-red-600 text-white text-xs">Ditolak</Badge>;
     case "PENGAJUAN":
       return <Badge className="bg-orange-500 hover:bg-orange-600 text-white text-xs">Pengajuan</Badge>;
     default:
@@ -97,13 +97,13 @@ const DetailCustomer = () => {
 
   const handleTerima = () => {
     if (!id) return;
-    updateCustomerStatus(id, "AKTIF");
+    updateCustomerStatus(id, "TERVERIFIKASI");
     setShowTerimaModal(true);
   };
 
   const handleTolak = () => {
     if (!id) return;
-    updateCustomerStatus(id, "TIDAK_AKTIF");
+    updateCustomerStatus(id, "DITOLAK");
     setShowTolakModal(true);
   };
 

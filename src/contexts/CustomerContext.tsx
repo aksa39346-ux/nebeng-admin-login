@@ -13,7 +13,7 @@ export interface CustomerDetailData {
   id: string;
   nama: string;
   kode: string;
-  status: "AKTIF" | "TIDAK_AKTIF" | "PENGAJUAN";
+  status: "PENGAJUAN" | "TERVERIFIKASI" | "DITOLAK";
   informasiPribadi: {
     namaLengkap: string;
     email: string;
@@ -33,16 +33,16 @@ export interface CustomerDetailData {
 
 // Initial list data
 const initialCustomerList: CustomerData[] = [
-  { id: "200001", nama: "Siti Aminah", email: "siti.aminah@gmail.com", noTlp: "081234567890", status: "AKTIF", tanggal: new Date(2024, 0, 10) },
-  { id: "200002", nama: "Rudi Hartono", email: "rudi.h@gmail.com", noTlp: "082345678901", status: "AKTIF", tanggal: new Date(2024, 0, 15) },
-  { id: "200003", nama: "Rina Wati", email: "rina.w@gmail.com", noTlp: "083456789012", status: "TIDAK_AKTIF", tanggal: new Date(2024, 1, 5) },
-  { id: "200004", nama: "Agus Setiawan", email: "agus.s@gmail.com", noTlp: "084567890123", status: "AKTIF", tanggal: new Date(2024, 1, 10) },
-  { id: "200005", nama: "Dewi Lestari", email: "dewi.l@gmail.com", noTlp: "085678901234", status: "AKTIF", tanggal: new Date(2024, 1, 20) },
-  { id: "200006", nama: "Bambang Wijaya", email: "bambang.w@gmail.com", noTlp: "086789012345", status: "TIDAK_AKTIF", tanggal: new Date(2024, 2, 1) },
-  { id: "200007", nama: "Sri Mulyani", email: "sri.m@gmail.com", noTlp: "087890123456", status: "AKTIF", tanggal: new Date(2024, 2, 10) },
-  { id: "200008", nama: "Hasan Basri", email: "hasan.b@gmail.com", noTlp: "088901234567", status: "AKTIF", tanggal: new Date(2024, 2, 15) },
-  { id: "200009", nama: "Yuni Astuti", email: "yuni.a@gmail.com", noTlp: "089012345678", status: "TIDAK_AKTIF", tanggal: new Date(2024, 3, 1) },
-  { id: "200010", nama: "Andi Pratama", email: "andi.p@gmail.com", noTlp: "081122334455", status: "AKTIF", tanggal: new Date(2024, 3, 5) },
+  { id: "200001", nama: "Siti Aminah", email: "siti.aminah@gmail.com", noTlp: "081234567890", status: "PENGAJUAN", tanggal: new Date(2024, 0, 10) },
+  { id: "200002", nama: "Rudi Hartono", email: "rudi.h@gmail.com", noTlp: "082345678901", status: "TERVERIFIKASI", tanggal: new Date(2024, 0, 15) },
+  { id: "200003", nama: "Rina Wati", email: "rina.w@gmail.com", noTlp: "083456789012", status: "DITOLAK", tanggal: new Date(2024, 1, 5) },
+  { id: "200004", nama: "Agus Setiawan", email: "agus.s@gmail.com", noTlp: "084567890123", status: "PENGAJUAN", tanggal: new Date(2024, 1, 10) },
+  { id: "200005", nama: "Dewi Lestari", email: "dewi.l@gmail.com", noTlp: "085678901234", status: "TERVERIFIKASI", tanggal: new Date(2024, 1, 20) },
+  { id: "200006", nama: "Bambang Wijaya", email: "bambang.w@gmail.com", noTlp: "086789012345", status: "DITOLAK", tanggal: new Date(2024, 2, 1) },
+  { id: "200007", nama: "Sri Mulyani", email: "sri.m@gmail.com", noTlp: "087890123456", status: "PENGAJUAN", tanggal: new Date(2024, 2, 10) },
+  { id: "200008", nama: "Hasan Basri", email: "hasan.b@gmail.com", noTlp: "088901234567", status: "TERVERIFIKASI", tanggal: new Date(2024, 2, 15) },
+  { id: "200009", nama: "Yuni Astuti", email: "yuni.a@gmail.com", noTlp: "089012345678", status: "PENGAJUAN", tanggal: new Date(2024, 3, 1) },
+  { id: "200010", nama: "Andi Pratama", email: "andi.p@gmail.com", noTlp: "081122334455", status: "TERVERIFIKASI", tanggal: new Date(2024, 3, 5) },
 ];
 
 // Initial detail data
@@ -72,7 +72,7 @@ const initialCustomerDetail: Record<string, CustomerDetailData> = {
     id: "200002",
     nama: "Rudi Hartono",
     kode: "CST002",
-    status: "AKTIF",
+    status: "TERVERIFIKASI",
     informasiPribadi: {
       namaLengkap: "Rudi Hartono",
       email: "rudi.h@gmail.com",
@@ -93,7 +93,7 @@ const initialCustomerDetail: Record<string, CustomerDetailData> = {
     id: "200003",
     nama: "Rina Wati",
     kode: "CST003",
-    status: "TIDAK_AKTIF",
+    status: "DITOLAK",
     informasiPribadi: {
       namaLengkap: "Rina Wati",
       email: "rina.w@gmail.com",
@@ -135,7 +135,7 @@ const initialCustomerDetail: Record<string, CustomerDetailData> = {
     id: "200005",
     nama: "Dewi Lestari",
     kode: "CST005",
-    status: "AKTIF",
+    status: "TERVERIFIKASI",
     informasiPribadi: {
       namaLengkap: "Dewi Lestari",
       email: "dewi.l@gmail.com",
@@ -156,7 +156,7 @@ const initialCustomerDetail: Record<string, CustomerDetailData> = {
     id: "200006",
     nama: "Bambang Wijaya",
     kode: "CST006",
-    status: "TIDAK_AKTIF",
+    status: "DITOLAK",
     informasiPribadi: {
       namaLengkap: "Bambang Wijaya",
       email: "bambang.w@gmail.com",
@@ -198,7 +198,7 @@ const initialCustomerDetail: Record<string, CustomerDetailData> = {
     id: "200008",
     nama: "Hasan Basri",
     kode: "CST008",
-    status: "AKTIF",
+    status: "TERVERIFIKASI",
     informasiPribadi: {
       namaLengkap: "Hasan Basri",
       email: "hasan.b@gmail.com",
@@ -219,7 +219,7 @@ const initialCustomerDetail: Record<string, CustomerDetailData> = {
     id: "200009",
     nama: "Yuni Astuti",
     kode: "CST009",
-    status: "TIDAK_AKTIF",
+    status: "PENGAJUAN",
     informasiPribadi: {
       namaLengkap: "Yuni Astuti",
       email: "yuni.a@gmail.com",
@@ -240,7 +240,7 @@ const initialCustomerDetail: Record<string, CustomerDetailData> = {
     id: "200010",
     nama: "Andi Pratama",
     kode: "CST010",
-    status: "PENGAJUAN",
+    status: "TERVERIFIKASI",
     informasiPribadi: {
       namaLengkap: "Andi Pratama",
       email: "andi.p@gmail.com",
@@ -262,7 +262,7 @@ const initialCustomerDetail: Record<string, CustomerDetailData> = {
 interface CustomerContextType {
   customerList: CustomerData[];
   customerDetail: Record<string, CustomerDetailData>;
-  updateCustomerStatus: (id: string, status: "AKTIF" | "TIDAK_AKTIF" | "PENGAJUAN") => void;
+  updateCustomerStatus: (id: string, status: "PENGAJUAN" | "TERVERIFIKASI" | "DITOLAK") => void;
   updateCustomerInfo: (id: string, info: CustomerDetailData["informasiPribadi"]) => void;
 }
 
@@ -272,7 +272,7 @@ export const CustomerProvider = ({ children }: { children: ReactNode }) => {
   const [customerList, setCustomerList] = useState<CustomerData[]>(initialCustomerList);
   const [customerDetail, setCustomerDetail] = useState<Record<string, CustomerDetailData>>(initialCustomerDetail);
 
-  const updateCustomerStatus = (id: string, status: "AKTIF" | "TIDAK_AKTIF" | "PENGAJUAN") => {
+  const updateCustomerStatus = (id: string, status: "PENGAJUAN" | "TERVERIFIKASI" | "DITOLAK") => {
     setCustomerList(prev => 
       prev.map(customer => 
         customer.id === id ? { ...customer, status } : customer

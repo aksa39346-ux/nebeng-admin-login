@@ -22,10 +22,12 @@ import {
 
 const getStatusBadge = (status: string) => {
   switch (status) {
-    case "AKTIF":
-      return <Badge className="bg-green-500 hover:bg-green-600 text-white text-xs">AKTIF</Badge>;
-    case "TIDAK_AKTIF":
-      return <Badge className="bg-gray-500 hover:bg-gray-600 text-white text-xs">TIDAK AKTIF</Badge>;
+    case "TERVERIFIKASI":
+      return <Badge className="bg-green-500 hover:bg-green-600 text-white text-xs">TERVERIFIKASI</Badge>;
+    case "DITOLAK":
+      return <Badge className="bg-red-500 hover:bg-red-600 text-white text-xs">DITOLAK</Badge>;
+    case "PENGAJUAN":
+      return <Badge className="bg-orange-500 hover:bg-orange-600 text-white text-xs">PENGAJUAN</Badge>;
     default:
       return <Badge className="bg-gray-500 text-white text-xs">{status}</Badge>;
   }
@@ -165,8 +167,9 @@ const VerifikasiCustomer = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="SEMUA">Semua</SelectItem>
-                  <SelectItem value="AKTIF">Aktif</SelectItem>
-                  <SelectItem value="TIDAK_AKTIF">Tidak Aktif</SelectItem>
+                  <SelectItem value="PENGAJUAN">Pengajuan</SelectItem>
+                  <SelectItem value="TERVERIFIKASI">Terverifikasi</SelectItem>
+                  <SelectItem value="DITOLAK">Ditolak</SelectItem>
                 </SelectContent>
               </Select>
 
