@@ -165,9 +165,15 @@ const DetailMitra = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   
+  const mitra = id ? mitraDetailData[id] : null;
+  
   const [status, setStatus] = useState<"PENGAJUAN" | "TERVERIFIKASI" | "DITOLAK">(
-    id ? mitraDetailData[id]?.status || "PENGAJUAN" : "PENGAJUAN"
+    mitra?.status || "PENGAJUAN"
   );
+  
+  // Edit mode state
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editStatus, setEditStatus] = useState<"PENGAJUAN" | "TERVERIFIKASI" | "DITOLAK">(status);
   
   // Modal states
   const [showConfirmTolak, setShowConfirmTolak] = useState(false);
@@ -181,8 +187,6 @@ const DetailMitra = () => {
   const [catatanLainnya, setCatatanLainnya] = useState("");
   const [selectedAlasanPerubahan, setSelectedAlasanPerubahan] = useState("");
   
-  const mitra = id ? mitraDetailData[id] : null;
-  
   if (!mitra) {
     return (
       <div className="p-6">
@@ -192,9 +196,34 @@ const DetailMitra = () => {
     );
   }
 
-  const handleVerifikasi = () => {
-    setStatus("TERVERIFIKASI");
-    setShowSuccessVerifikasi(true);
+  const handleEnterEditMode = () => {
+    setIsEditMode(true);
+    setEditStatus(status);
+  };
+
+  const handleSave = () => {
+    // If changing to DITOLAK, show rejection reason modal
+    if (editStatus === "DITOLAK" && status !== "DITOLAK") {
+      setShowConfirmTolak(true);
+      return;
+    }
+    
+    // If changing to TERVERIFIKASI
+    if (editStatus === "TERVERIFIKASI" && status !== "TERVERIFIKASI") {
+      setStatus("TERVERIFIKASI");
+      setShowSuccessVerifikasi(true);
+      setIsEditMode(false);
+      return;
+    }
+    
+    // If changing from DITOLAK to PENGAJUAN
+    if (editStatus === "PENGAJUAN" && status === "DITOLAK") {
+      setShowUbahStatus(true);
+      return;
+    }
+    
+    // Just save without status change
+    setIsEditMode(false);
   };
 
   const handleTolakConfirm = () => {
@@ -208,12 +237,15 @@ const DetailMitra = () => {
     setShowSuccessTolak(true);
     setSelectedAlasan("");
     setCatatanLainnya("");
+    setIsEditMode(false);
   };
 
   const handleUbahKeProses = () => {
     setStatus("PENGAJUAN");
+    setEditStatus("PENGAJUAN");
     setShowUbahStatus(false);
     setSelectedAlasanPerubahan("");
+    setIsEditMode(false);
   };
 
   return (
@@ -259,43 +291,47 @@ const DetailMitra = () => {
                 </svg>
               </div>
               <div className="mt-2">
-                {getStatusBadge(status)}
+                {isEditMode ? (
+                  <Select value={editStatus} onValueChange={(val) => setEditStatus(val as "PENGAJUAN" | "TERVERIFIKASI" | "DITOLAK")}>
+                    <SelectTrigger className="w-40 h-8">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="PENGAJUAN">
+                        <span className="text-orange-500">Pengajuan</span>
+                      </SelectItem>
+                      <SelectItem value="TERVERIFIKASI">
+                        <span className="text-green-500">Terverifikasi</span>
+                      </SelectItem>
+                      <SelectItem value="DITOLAK">
+                        <span className="text-red-500">Ditolak</span>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  getStatusBadge(status)
+                )}
               </div>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            {/* Action buttons based on status */}
-            {status === "PENGAJUAN" && (
-              <>
-                <Button 
-                  variant="outline" 
-                  className="gap-2 border-red-500 text-red-500 hover:bg-red-50 hover:text-red-600"
-                  onClick={() => setShowConfirmTolak(true)}
-                >
-                  <XCircle size={16} />
-                  Tolak
-                </Button>
-                <Button 
-                  className="gap-2 bg-green-600 hover:bg-green-700"
-                  onClick={handleVerifikasi}
-                >
-                  <CheckCircle size={16} />
-                  Verifikasi
-                </Button>
-              </>
-            )}
-            {status === "DITOLAK" && (
+            {isEditMode ? (
               <Button 
-                className="gap-2"
-                onClick={() => setShowUbahStatus(true)}
+                className="gap-2 bg-primary hover:bg-primary/90"
+                onClick={handleSave}
               >
-                Ubah ke Proses Verifikasi
+                Simpan
+              </Button>
+            ) : (
+              <Button 
+                variant="outline" 
+                className="gap-2"
+                onClick={handleEnterEditMode}
+              >
+                <span>Edit</span>
+                <Edit size={16} />
               </Button>
             )}
-            <Button variant="outline" className="gap-2">
-              <span>Edit</span>
-              <Edit size={16} />
-            </Button>
           </div>
         </div>
 
