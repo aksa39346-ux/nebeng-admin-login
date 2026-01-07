@@ -12,7 +12,10 @@ import Dashboard from "./pages/Dashboard";
 import Profile from "./pages/Profile";
 import VerifikasiMitra from "./pages/VerifikasiMitra";
 import DetailMitra from "./pages/DetailMitra";
+import VerifikasiCustomer from "./pages/VerifikasiCustomer";
+import DetailCustomer from "./pages/DetailCustomer";
 import { MitraProvider } from "./contexts/MitraContext";
+import { CustomerProvider } from "./contexts/CustomerContext";
 
 const queryClient = new QueryClient();
 
@@ -20,26 +23,30 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <MitraProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
-            
-            {/* Dashboard Routes */}
-            <Route path="/dashboard" element={<DashboardLayout />}>
-              <Route index element={<Dashboard />} />
-              <Route path="profile" element={<Profile />} />
-              <Route path="verifikasi-mitra" element={<VerifikasiMitra />} />
-              <Route path="verifikasi-mitra/:id" element={<DetailMitra />} />
-            </Route>
-            
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
+        <CustomerProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
+              
+              {/* Dashboard Routes */}
+              <Route path="/dashboard" element={<DashboardLayout />}>
+                <Route index element={<Dashboard />} />
+                <Route path="profile" element={<Profile />} />
+                <Route path="verifikasi-mitra" element={<VerifikasiMitra />} />
+                <Route path="verifikasi-mitra/:id" element={<DetailMitra />} />
+                <Route path="verifikasi-costumer" element={<VerifikasiCustomer />} />
+                <Route path="verifikasi-costumer/:id" element={<DetailCustomer />} />
+              </Route>
+              
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </CustomerProvider>
       </MitraProvider>
     </TooltipProvider>
   </QueryClientProvider>
