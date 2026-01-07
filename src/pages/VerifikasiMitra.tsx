@@ -10,6 +10,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { format } from "date-fns";
 import { id as localeId } from "date-fns/locale";
 import { cn } from "@/lib/utils";
+import * as XLSX from "xlsx";
 import {
   Select,
   SelectContent,
@@ -92,7 +93,7 @@ const VerifikasiMitra = () => {
     setCurrentPage(1);
   };
 
-  // Download CSV function (using semicolon delimiter for Excel compatibility)
+  // Download Excel function with auto column width
   const handleDownload = () => {
     const dataToExport = filteredData;
     
@@ -100,29 +101,38 @@ const VerifikasiMitra = () => {
       return;
     }
 
-    const headers = ["NO. ID", "NAMA", "EMAIL", "NO. TLP", "LAYANAN", "STATUS", "TANGGAL"];
-    const csvContent = [
-      headers.join(";"),
-      ...dataToExport.map(mitra => [
-        mitra.id,
-        mitra.nama,
-        mitra.email,
-        mitra.noTlp,
-        mitra.layanan,
-        mitra.status,
-        format(mitra.tanggal, "dd-MM-yyyy")
-      ].join(";"))
-    ].join("\n");
+    // Prepare data for Excel
+    const excelData = dataToExport.map(mitra => ({
+      "NO. ID": mitra.id,
+      "NAMA": mitra.nama,
+      "EMAIL": mitra.email,
+      "NO. TLP": mitra.noTlp,
+      "LAYANAN": mitra.layanan,
+      "STATUS": mitra.status,
+      "TANGGAL": format(mitra.tanggal, "dd-MM-yyyy")
+    }));
 
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const link = document.createElement("a");
-    const url = URL.createObjectURL(blob);
-    link.setAttribute("href", url);
-    link.setAttribute("download", `data-mitra-${format(new Date(), "yyyy-MM-dd")}.csv`);
-    link.style.visibility = "hidden";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    // Create worksheet
+    const worksheet = XLSX.utils.json_to_sheet(excelData);
+
+    // Auto-fit column widths
+    const columnWidths = [
+      { wch: 10 },  // NO. ID
+      { wch: 25 },  // NAMA
+      { wch: 30 },  // EMAIL
+      { wch: 15 },  // NO. TLP
+      { wch: 15 },  // LAYANAN
+      { wch: 15 },  // STATUS
+      { wch: 12 },  // TANGGAL
+    ];
+    worksheet["!cols"] = columnWidths;
+
+    // Create workbook
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Data Mitra");
+
+    // Download file
+    XLSX.writeFile(workbook, `data-mitra-${format(new Date(), "yyyy-MM-dd")}.xlsx`);
   };
 
   // Generate page numbers for pagination
