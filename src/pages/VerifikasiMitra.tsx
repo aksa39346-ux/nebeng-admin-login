@@ -20,8 +20,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-// Sample data dengan berbagai status dan tanggal
-const mitraData = [
+// Initial sample data dengan berbagai status dan tanggal
+const initialMitraData = [
   { id: "100001", nama: "Muhammad Abdul", email: "dul22345@gmail.com", noTlp: "089563245757", layanan: "Motor", status: "PENGAJUAN", tanggal: new Date(2024, 0, 15) },
   { id: "100002", nama: "Ahmad Rizki", email: "ahmad.rizki@gmail.com", noTlp: "081234567890", layanan: "Mobil", status: "TERVERIFIKASI", tanggal: new Date(2024, 0, 20) },
   { id: "100003", nama: "Budi Santoso", email: "budi.santoso@gmail.com", noTlp: "082345678901", layanan: "Titip Barang", status: "DITOLAK", tanggal: new Date(2024, 1, 5) },
@@ -42,6 +42,8 @@ const getStatusBadge = (status: string) => {
       return <Badge className="bg-green-500 hover:bg-green-600 text-white text-xs">TERVERIFIKASI</Badge>;
     case "DITOLAK":
       return <Badge className="bg-red-500 hover:bg-red-600 text-white text-xs">DITOLAK</Badge>;
+    case "DIBLOCK":
+      return <Badge className="bg-gray-500 hover:bg-gray-600 text-white text-xs">DIBLOCK</Badge>;
     default:
       return <Badge className="bg-gray-500 text-white text-xs">{status}</Badge>;
   }
@@ -49,15 +51,17 @@ const getStatusBadge = (status: string) => {
 
 const VerifikasiMitra = () => {
   const navigate = useNavigate();
+  const [mitraData, setMitraData] = useState(initialMitraData);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [entriesPerPage, setEntriesPerPage] = useState("10");
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+  const [statusFilter, setStatusFilter] = useState<string>("AKTIF"); // AKTIF = semua kecuali DIBLOCK
   const [blockPopupOpen, setBlockPopupOpen] = useState(false);
   const [blockSuccessOpen, setBlockSuccessOpen] = useState(false);
   const [selectedMitraId, setSelectedMitraId] = useState<string | null>(null);
 
-  // Filter data based on search and date
+  // Filter data based on search, date, and status filter
   const filteredData = useMemo(() => {
     return mitraData.filter((mitra) => {
       const matchesSearch = searchQuery === "" || 
@@ -73,9 +77,15 @@ const VerifikasiMitra = () => {
          mitra.tanggal.getMonth() === selectedDate.getMonth() &&
          mitra.tanggal.getDate() === selectedDate.getDate());
 
-      return matchesSearch && matchesDate;
+      // Status filter: AKTIF shows all except DIBLOCK, DIBLOCK shows only blocked
+      const matchesStatus = 
+        statusFilter === "SEMUA" ||
+        (statusFilter === "AKTIF" && mitra.status !== "DIBLOCK") ||
+        (statusFilter === "DIBLOCK" && mitra.status === "DIBLOCK");
+
+      return matchesSearch && matchesDate && matchesStatus;
     });
-  }, [searchQuery, selectedDate]);
+  }, [mitraData, searchQuery, selectedDate, statusFilter]);
 
   // Pagination
   const itemsPerPage = parseInt(entriesPerPage);
@@ -147,9 +157,23 @@ const VerifikasiMitra = () => {
 
   const handleBlockConfirm = () => {
     setBlockPopupOpen(false);
-    // Here you would typically make an API call to block the mitra
-    console.log(`Blocking mitra with ID: ${selectedMitraId}`);
+    // Update the mitra status to DIBLOCK
+    if (selectedMitraId) {
+      setMitraData(prevData => 
+        prevData.map(mitra => 
+          mitra.id === selectedMitraId 
+            ? { ...mitra, status: "DIBLOCK" } 
+            : mitra
+        )
+      );
+    }
     setBlockSuccessOpen(true);
+  };
+
+  // Handle status filter change
+  const handleStatusFilterChange = (value: string) => {
+    setStatusFilter(value);
+    setCurrentPage(1);
   };
 
   // Generate page numbers for pagination
@@ -188,6 +212,18 @@ const VerifikasiMitra = () => {
               />
             </div>
             <div className="flex items-center gap-3">
+              {/* Status Filter */}
+              <Select value={statusFilter} onValueChange={handleStatusFilterChange}>
+                <SelectTrigger className="w-40 h-10">
+                  <SelectValue placeholder="Filter Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="AKTIF">Mitra Aktif</SelectItem>
+                  <SelectItem value="DIBLOCK">Mitra Diblock</SelectItem>
+                  <SelectItem value="SEMUA">Semua Mitra</SelectItem>
+                </SelectContent>
+              </Select>
+
               <Popover>
                 <PopoverTrigger asChild>
                   <Button variant="outline" className={cn("gap-2", selectedDate && "text-primary border-primary")}>
