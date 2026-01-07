@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ChevronLeft, Calendar, Edit } from "lucide-react";
+import { ChevronLeft, Calendar, Edit, Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { useCustomer } from "@/contexts/CustomerContext";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
 import ktpPlaceholder from "@/assets/ktp-placeholder.png";
 
 const getStatusBadge = (status: "AKTIF" | "TIDAK_AKTIF" | "PENGAJUAN") => {
@@ -26,13 +27,26 @@ const getStatusBadge = (status: "AKTIF" | "TIDAK_AKTIF" | "PENGAJUAN") => {
 const DetailCustomer = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { customerDetail, updateCustomerStatus } = useCustomer();
+  const { customerDetail, updateCustomerStatus, updateCustomerInfo } = useCustomer();
+  const { toast } = useToast();
   
   const customer = id ? customerDetail[id] : null;
+  
+  // Edit mode state
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editData, setEditData] = useState({
+    namaLengkap: "",
+    email: "",
+    tempatLahir: "",
+    tanggalLahir: "",
+    jenisKelamin: "",
+    noTlp: "",
+  });
   
   // Success modal states
   const [showTerimaModal, setShowTerimaModal] = useState(false);
   const [showTolakModal, setShowTolakModal] = useState(false);
+  const [showEditSuccessModal, setShowEditSuccessModal] = useState(false);
   
   if (!customer) {
     return (
@@ -42,6 +56,43 @@ const DetailCustomer = () => {
       </div>
     );
   }
+
+  const handleEnterEditMode = () => {
+    setEditData({
+      namaLengkap: customer.informasiPribadi.namaLengkap,
+      email: customer.informasiPribadi.email,
+      tempatLahir: customer.informasiPribadi.tempatLahir,
+      tanggalLahir: customer.informasiPribadi.tanggalLahir,
+      jenisKelamin: customer.informasiPribadi.jenisKelamin,
+      noTlp: customer.informasiPribadi.noTlp,
+    });
+    setIsEditMode(true);
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditMode(false);
+  };
+
+  const handleSaveEdit = () => {
+    if (!id) return;
+    
+    if (!editData.namaLengkap.trim() || !editData.email.trim() || !editData.noTlp.trim()) {
+      toast({
+        title: "Error",
+        description: "Nama, Email, dan No. Tlp wajib diisi",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    updateCustomerInfo(id, editData);
+    setIsEditMode(false);
+    setShowEditSuccessModal(true);
+  };
+
+  const handleInputChange = (field: keyof typeof editData, value: string) => {
+    setEditData(prev => ({ ...prev, [field]: value }));
+  };
 
   const handleTerima = () => {
     if (!id) return;
@@ -91,13 +142,36 @@ const DetailCustomer = () => {
               </div>
             </div>
           </div>
-          <Button 
-            variant="outline" 
-            className="gap-2 text-primary border-primary hover:bg-primary/10"
-          >
-            <Edit size={16} />
-            Edit
-          </Button>
+          <div className="flex items-center gap-2">
+            {isEditMode ? (
+              <>
+                <Button 
+                  variant="outline"
+                  className="gap-2"
+                  onClick={handleCancelEdit}
+                >
+                  <X size={16} />
+                  Batal
+                </Button>
+                <Button 
+                  className="gap-2 bg-primary hover:bg-primary/90"
+                  onClick={handleSaveEdit}
+                >
+                  <Check size={16} />
+                  Simpan
+                </Button>
+              </>
+            ) : (
+              <Button 
+                variant="outline" 
+                className="gap-2 text-primary border-primary hover:bg-primary/10"
+                onClick={handleEnterEditMode}
+              >
+                <Edit size={16} />
+                Edit
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Informasi Pribadi */}
@@ -107,56 +181,73 @@ const DetailCustomer = () => {
             <div>
               <label className="text-sm text-muted-foreground">Nama Lengkap</label>
               <Input 
-                value={customer.informasiPribadi.namaLengkap} 
-                readOnly
-                className="mt-1 bg-muted/50" 
+                value={isEditMode ? editData.namaLengkap : customer.informasiPribadi.namaLengkap} 
+                readOnly={!isEditMode}
+                onChange={(e) => handleInputChange("namaLengkap", e.target.value)}
+                className={`mt-1 ${isEditMode ? "bg-background" : "bg-muted/50"}`}
               />
             </div>
             <div>
               <label className="text-sm text-muted-foreground">Email</label>
               <Input 
-                value={customer.informasiPribadi.email} 
-                readOnly
-                className="mt-1 bg-muted/50" 
+                value={isEditMode ? editData.email : customer.informasiPribadi.email} 
+                readOnly={!isEditMode}
+                onChange={(e) => handleInputChange("email", e.target.value)}
+                className={`mt-1 ${isEditMode ? "bg-background" : "bg-muted/50"}`}
               />
             </div>
             <div>
               <label className="text-sm text-muted-foreground">Tempat Lahir</label>
               <Input 
-                value={customer.informasiPribadi.tempatLahir} 
-                readOnly
-                className="mt-1 bg-muted/50" 
+                value={isEditMode ? editData.tempatLahir : customer.informasiPribadi.tempatLahir} 
+                readOnly={!isEditMode}
+                onChange={(e) => handleInputChange("tempatLahir", e.target.value)}
+                className={`mt-1 ${isEditMode ? "bg-background" : "bg-muted/50"}`}
               />
             </div>
             <div>
               <label className="text-sm text-muted-foreground">Tanggal Lahir</label>
               <div className="relative mt-1">
                 <Input 
-                  value={customer.informasiPribadi.tanggalLahir} 
-                  readOnly
-                  className="pr-10 bg-muted/50" 
+                  value={isEditMode ? editData.tanggalLahir : customer.informasiPribadi.tanggalLahir} 
+                  readOnly={!isEditMode}
+                  onChange={(e) => handleInputChange("tanggalLahir", e.target.value)}
+                  className={`pr-10 ${isEditMode ? "bg-background" : "bg-muted/50"}`}
                 />
                 <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
               </div>
             </div>
             <div>
               <label className="text-sm text-muted-foreground">Jenis Kelamin</label>
-              <Select value={customer.informasiPribadi.jenisKelamin} disabled>
-                <SelectTrigger className="mt-1 bg-muted/50">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Laki - Laki">Laki - Laki</SelectItem>
-                  <SelectItem value="Perempuan">Perempuan</SelectItem>
-                </SelectContent>
-              </Select>
+              {isEditMode ? (
+                <Select value={editData.jenisKelamin} onValueChange={(val) => handleInputChange("jenisKelamin", val)}>
+                  <SelectTrigger className="mt-1">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Laki - Laki">Laki - Laki</SelectItem>
+                    <SelectItem value="Perempuan">Perempuan</SelectItem>
+                  </SelectContent>
+                </Select>
+              ) : (
+                <Select value={customer.informasiPribadi.jenisKelamin} disabled>
+                  <SelectTrigger className="mt-1 bg-muted/50">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Laki - Laki">Laki - Laki</SelectItem>
+                    <SelectItem value="Perempuan">Perempuan</SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
             </div>
             <div>
               <label className="text-sm text-muted-foreground">No. Tlp</label>
               <Input 
-                value={customer.informasiPribadi.noTlp} 
-                readOnly
-                className="mt-1 bg-muted/50" 
+                value={isEditMode ? editData.noTlp : customer.informasiPribadi.noTlp} 
+                readOnly={!isEditMode}
+                onChange={(e) => handleInputChange("noTlp", e.target.value)}
+                className={`mt-1 ${isEditMode ? "bg-background" : "bg-muted/50"}`}
               />
             </div>
           </div>
@@ -290,6 +381,33 @@ const DetailCustomer = () => {
                 setShowTolakModal(false);
                 navigate(-1);
               }}
+            >
+              Oke
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Success Modal */}
+      <Dialog open={showEditSuccessModal} onOpenChange={setShowEditSuccessModal}>
+        <DialogContent className="sm:max-w-md p-0 border-0 overflow-hidden">
+          <div className="h-1.5 bg-primary" />
+          <div className="p-8 flex flex-col items-center text-center">
+            <h2 className="text-xl font-bold text-foreground mb-6">
+              Data Customer Berhasil Diperbarui
+            </h2>
+            
+            <div className="mb-8">
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
+                <svg viewBox="0 0 24 24" className="w-8 h-8 text-green-500" fill="none" stroke="currentColor" strokeWidth="3">
+                  <path d="M5 12l5 5L19 7" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
+            </div>
+            
+            <Button 
+              className="px-8 bg-primary hover:bg-primary/90 text-primary-foreground"
+              onClick={() => setShowEditSuccessModal(false)}
             >
               Oke
             </Button>
