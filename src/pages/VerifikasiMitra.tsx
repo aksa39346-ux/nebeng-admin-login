@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, Calendar as CalendarIcon, Download, Eye, Trash2 } from "lucide-react";
+import { Search, Calendar as CalendarIcon, Download, Eye, Lock } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import { format } from "date-fns";
 import { id as localeId } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import * as XLSX from "xlsx";
+import BlockMitraPopup from "@/components/BlockMitraPopup";
 import {
   Select,
   SelectContent,
@@ -52,6 +53,9 @@ const VerifikasiMitra = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [entriesPerPage, setEntriesPerPage] = useState("10");
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+  const [blockPopupOpen, setBlockPopupOpen] = useState(false);
+  const [blockSuccessOpen, setBlockSuccessOpen] = useState(false);
+  const [selectedMitraId, setSelectedMitraId] = useState<string | null>(null);
 
   // Filter data based on search and date
   const filteredData = useMemo(() => {
@@ -133,6 +137,19 @@ const VerifikasiMitra = () => {
 
     // Download file
     XLSX.writeFile(workbook, `data-mitra-${format(new Date(), "yyyy-MM-dd")}.xlsx`);
+  };
+
+  // Handle block mitra
+  const handleBlockClick = (mitraId: string) => {
+    setSelectedMitraId(mitraId);
+    setBlockPopupOpen(true);
+  };
+
+  const handleBlockConfirm = () => {
+    setBlockPopupOpen(false);
+    // Here you would typically make an API call to block the mitra
+    console.log(`Blocking mitra with ID: ${selectedMitraId}`);
+    setBlockSuccessOpen(true);
   };
 
   // Generate page numbers for pagination
@@ -238,13 +255,18 @@ const VerifikasiMitra = () => {
                           <Button 
                             variant="ghost" 
                             size="icon" 
-                            className="h-8 w-8"
+                            className="h-8 w-8 bg-[#1e3a5f] hover:bg-[#152a45]"
                             onClick={() => navigate(`/dashboard/verifikasi-mitra/${mitra.id}`)}
                           >
-                            <Eye size={18} className="text-primary" />
+                            <Eye size={18} className="text-white" />
                           </Button>
-                          <Button variant="ghost" size="icon" className="h-8 w-8">
-                            <Trash2 size={18} className="text-red-500" />
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-8 w-8 bg-red-600 hover:bg-red-700"
+                            onClick={() => handleBlockClick(mitra.id)}
+                          >
+                            <Lock size={18} className="text-white" />
                           </Button>
                         </div>
                       </td>
@@ -314,6 +336,22 @@ const VerifikasiMitra = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Block Confirmation Popup */}
+      <BlockMitraPopup
+        open={blockPopupOpen}
+        onOpenChange={setBlockPopupOpen}
+        onConfirm={handleBlockConfirm}
+        type="confirm"
+      />
+
+      {/* Block Success Popup */}
+      <BlockMitraPopup
+        open={blockSuccessOpen}
+        onOpenChange={setBlockSuccessOpen}
+        onConfirm={() => {}}
+        type="success"
+      />
     </div>
   );
 };
