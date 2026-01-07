@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ChevronLeft, Edit, Calendar, Search as SearchIcon, CheckCircle, XCircle, AlertTriangle } from "lucide-react";
+import { ChevronLeft, Edit, Calendar, Search as SearchIcon, CheckCircle, XCircle, AlertTriangle, LockOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useMitra } from "@/contexts/MitraContext";
+import UnblockMitraPopup from "@/components/UnblockMitraPopup";
 
 const alasanPenolakan = [
   "Tidak Memenuhi Persyaratan Kendaraan",
@@ -48,7 +49,7 @@ const getStatusBadge = (status: "PENGAJUAN" | "TERVERIFIKASI" | "DITOLAK" | "DIB
 const DetailMitra = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { mitraDetail, updateMitraStatus } = useMitra();
+  const { mitraDetail, updateMitraStatus, unblockMitra } = useMitra();
   
   const mitra = id ? mitraDetail[id] : null;
   
@@ -68,6 +69,8 @@ const DetailMitra = () => {
   const [showSuccessVerifikasi, setShowSuccessVerifikasi] = useState(false);
   const [showSuccessTolak, setShowSuccessTolak] = useState(false);
   const [showUbahStatus, setShowUbahStatus] = useState(false);
+  const [showUnblockConfirm, setShowUnblockConfirm] = useState(false);
+  const [showUnblockSuccess, setShowUnblockSuccess] = useState(false);
   const [previewImage, setPreviewImage] = useState<{ src: string; title: string } | null>(null);
   
   // Form states
@@ -138,6 +141,13 @@ const DetailMitra = () => {
     setShowUbahStatus(false);
     setSelectedAlasanPerubahan("");
     setIsEditMode(false);
+  };
+
+  const handleUnblock = () => {
+    if (!id) return;
+    unblockMitra(id);
+    setShowUnblockConfirm(false);
+    setShowUnblockSuccess(true);
   };
 
   return (
@@ -219,12 +229,19 @@ const DetailMitra = () => {
               >
                 Simpan
               </Button>
+            ) : isBlocked ? (
+              <Button 
+                className="gap-2 bg-green-600 hover:bg-green-700 text-white"
+                onClick={() => setShowUnblockConfirm(true)}
+              >
+                <LockOpen size={16} />
+                <span>Unblock</span>
+              </Button>
             ) : (
               <Button 
                 variant="outline" 
                 className="gap-2"
                 onClick={handleEnterEditMode}
-                disabled={isBlocked}
               >
                 <span>Edit</span>
                 <Edit size={16} />
@@ -564,6 +581,22 @@ const DetailMitra = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Modal: Unblock Confirmation */}
+      <UnblockMitraPopup
+        open={showUnblockConfirm}
+        onOpenChange={setShowUnblockConfirm}
+        onConfirm={handleUnblock}
+        type="confirm"
+      />
+
+      {/* Modal: Unblock Success */}
+      <UnblockMitraPopup
+        open={showUnblockSuccess}
+        onOpenChange={setShowUnblockSuccess}
+        onConfirm={() => {}}
+        type="success"
+      />
     </div>
   );
 };

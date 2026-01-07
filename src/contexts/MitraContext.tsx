@@ -352,6 +352,7 @@ interface MitraContextType {
   mitraList: MitraData[];
   mitraDetail: Record<string, MitraDetailData>;
   blockMitra: (id: string) => void;
+  unblockMitra: (id: string) => void;
   updateMitraStatus: (id: string, status: "PENGAJUAN" | "TERVERIFIKASI" | "DITOLAK" | "DIBLOCK") => void;
 }
 
@@ -362,14 +363,12 @@ export const MitraProvider = ({ children }: { children: ReactNode }) => {
   const [mitraDetail, setMitraDetail] = useState<Record<string, MitraDetailData>>(initialMitraDetail);
 
   const blockMitra = (id: string) => {
-    // Update list
     setMitraList(prev => 
       prev.map(mitra => 
         mitra.id === id ? { ...mitra, status: "DIBLOCK" } : mitra
       )
     );
     
-    // Update detail
     setMitraDetail(prev => {
       if (prev[id]) {
         return {
@@ -381,15 +380,32 @@ export const MitraProvider = ({ children }: { children: ReactNode }) => {
     });
   };
 
+  const unblockMitra = (id: string) => {
+    // Unblock sets status back to PENGAJUAN
+    setMitraList(prev => 
+      prev.map(mitra => 
+        mitra.id === id ? { ...mitra, status: "PENGAJUAN" } : mitra
+      )
+    );
+    
+    setMitraDetail(prev => {
+      if (prev[id]) {
+        return {
+          ...prev,
+          [id]: { ...prev[id], status: "PENGAJUAN" }
+        };
+      }
+      return prev;
+    });
+  };
+
   const updateMitraStatus = (id: string, status: "PENGAJUAN" | "TERVERIFIKASI" | "DITOLAK" | "DIBLOCK") => {
-    // Update list
     setMitraList(prev => 
       prev.map(mitra => 
         mitra.id === id ? { ...mitra, status } : mitra
       )
     );
     
-    // Update detail
     setMitraDetail(prev => {
       if (prev[id]) {
         return {
@@ -402,7 +418,7 @@ export const MitraProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <MitraContext.Provider value={{ mitraList, mitraDetail, blockMitra, updateMitraStatus }}>
+    <MitraContext.Provider value={{ mitraList, mitraDetail, blockMitra, unblockMitra, updateMitraStatus }}>
       {children}
     </MitraContext.Provider>
   );
