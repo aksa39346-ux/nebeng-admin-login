@@ -57,7 +57,8 @@ const getStatusBadge = (status: string) => {
   }
 };
 
-const formatCurrency = (amount: number) => {
+const formatCurrency = (amount: number | undefined) => {
+  if (amount === undefined || amount === null) return "Rp. 0.00";
   return `Rp. ${amount.toLocaleString('id-ID')}.00`;
 };
 
