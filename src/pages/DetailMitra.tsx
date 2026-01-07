@@ -10,154 +10,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-
-// Dummy data dengan berbagai status
-const mitraDetailData: Record<string, {
-  id: string;
-  nama: string;
-  layanan: string;
-  kode: string;
-  status: "PENGAJUAN" | "TERVERIFIKASI" | "DITOLAK" | "DIBLOCK";
-  informasiPribadi: {
-    namaLengkap: string;
-    email: string;
-    tempatLahir: string;
-    tanggalLahir: string;
-    jenisKelamin: string;
-    noTlp: string;
-  };
-  informasiKTP: {
-    namaLengkap: string;
-    nik: string;
-    jenisKelamin: string;
-    tanggalLahir: string;
-    fotoKTP: string;
-  };
-  informasiSIM: {
-    namaLengkap: string;
-    nomorSIM: string;
-    jenisKelamin: string;
-    tanggalLahir: string;
-    fotoSIM: string;
-  };
-}> = {
-  "100001": {
-    id: "100001",
-    nama: "Muhammad Abdul",
-    layanan: "Nebeng Motor",
-    kode: "001235",
-    status: "PENGAJUAN",
-    informasiPribadi: {
-      namaLengkap: "Muhammad Abdul Kadir",
-      email: "100098360470019",
-      tempatLahir: "London",
-      tanggalLahir: "01-02-1999",
-      jenisKelamin: "Laki - Laki",
-      noTlp: "100098360470019",
-    },
-    informasiKTP: {
-      namaLengkap: "Muhammad Abdul Kadir",
-      nik: "100098360470019",
-      jenisKelamin: "Laki - Laki",
-      tanggalLahir: "01-02-1999",
-      fotoKTP: "/placeholder.svg",
-    },
-    informasiSIM: {
-      namaLengkap: "Muhammad Abdul Kadir",
-      nomorSIM: "100098360470019",
-      jenisKelamin: "Laki - Laki",
-      tanggalLahir: "01-02-1999",
-      fotoSIM: "/placeholder.svg",
-    },
-  },
-  "100002": {
-    id: "100002",
-    nama: "Ahmad Rizki",
-    layanan: "Nebeng Mobil",
-    kode: "001236",
-    status: "TERVERIFIKASI",
-    informasiPribadi: {
-      namaLengkap: "Ahmad Rizki Pratama",
-      email: "ahmad.rizki@gmail.com",
-      tempatLahir: "Jakarta",
-      tanggalLahir: "15-05-1995",
-      jenisKelamin: "Laki - Laki",
-      noTlp: "081234567890",
-    },
-    informasiKTP: {
-      namaLengkap: "Ahmad Rizki Pratama",
-      nik: "3201234567890001",
-      jenisKelamin: "Laki - Laki",
-      tanggalLahir: "15-05-1995",
-      fotoKTP: "/placeholder.svg",
-    },
-    informasiSIM: {
-      namaLengkap: "Ahmad Rizki Pratama",
-      nomorSIM: "1234567890123456",
-      jenisKelamin: "Laki - Laki",
-      tanggalLahir: "15-05-1995",
-      fotoSIM: "/placeholder.svg",
-    },
-  },
-  "100003": {
-    id: "100003",
-    nama: "Budi Santoso",
-    layanan: "Titip Barang",
-    kode: "001237",
-    status: "DITOLAK",
-    informasiPribadi: {
-      namaLengkap: "Budi Santoso",
-      email: "budi.santoso@gmail.com",
-      tempatLahir: "Bandung",
-      tanggalLahir: "20-08-1992",
-      jenisKelamin: "Laki - Laki",
-      noTlp: "082345678901",
-    },
-    informasiKTP: {
-      namaLengkap: "Budi Santoso",
-      nik: "3202345678900002",
-      jenisKelamin: "Laki - Laki",
-      tanggalLahir: "20-08-1992",
-      fotoKTP: "/placeholder.svg",
-    },
-    informasiSIM: {
-      namaLengkap: "Budi Santoso",
-      nomorSIM: "2345678901234567",
-      jenisKelamin: "Laki - Laki",
-      tanggalLahir: "20-08-1992",
-      fotoSIM: "/placeholder.svg",
-    },
-  },
-  "100004": {
-    id: "100004",
-    nama: "Dewi Kartika",
-    layanan: "Nebeng Motor",
-    kode: "001238",
-    status: "DIBLOCK",
-    informasiPribadi: {
-      namaLengkap: "Dewi Kartika Sari",
-      email: "dewi.k@gmail.com",
-      tempatLahir: "Surabaya",
-      tanggalLahir: "10-03-1994",
-      jenisKelamin: "Perempuan",
-      noTlp: "083456789012",
-    },
-    informasiKTP: {
-      namaLengkap: "Dewi Kartika Sari",
-      nik: "3203456789000003",
-      jenisKelamin: "Perempuan",
-      tanggalLahir: "10-03-1994",
-      fotoKTP: "/placeholder.svg",
-    },
-    informasiSIM: {
-      namaLengkap: "Dewi Kartika Sari",
-      nomorSIM: "3456789012345678",
-      jenisKelamin: "Perempuan",
-      tanggalLahir: "10-03-1994",
-      fotoSIM: "/placeholder.svg",
-    },
-  },
-};
+import { useMitra } from "@/contexts/MitraContext";
 
 const alasanPenolakan = [
   "Tidak Memenuhi Persyaratan Kendaraan",
@@ -195,19 +48,19 @@ const getStatusBadge = (status: "PENGAJUAN" | "TERVERIFIKASI" | "DITOLAK" | "DIB
 const DetailMitra = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { mitraDetail, updateMitraStatus } = useMitra();
   
-  const mitra = id ? mitraDetailData[id] : null;
+  const mitra = id ? mitraDetail[id] : null;
   
-  const [status, setStatus] = useState<"PENGAJUAN" | "TERVERIFIKASI" | "DITOLAK" | "DIBLOCK">(
-    mitra?.status || "PENGAJUAN"
-  );
+  // Get current status from context
+  const currentStatus = mitra?.status || "PENGAJUAN";
   
   // Check if mitra is blocked
-  const isBlocked = status === "DIBLOCK";
+  const isBlocked = currentStatus === "DIBLOCK";
   
   // Edit mode state
   const [isEditMode, setIsEditMode] = useState(false);
-  const [editStatus, setEditStatus] = useState<"PENGAJUAN" | "TERVERIFIKASI" | "DITOLAK" | "DIBLOCK">(status);
+  const [editStatus, setEditStatus] = useState<"PENGAJUAN" | "TERVERIFIKASI" | "DITOLAK" | "DIBLOCK">(currentStatus);
   
   // Modal states
   const [showConfirmTolak, setShowConfirmTolak] = useState(false);
@@ -233,26 +86,28 @@ const DetailMitra = () => {
 
   const handleEnterEditMode = () => {
     setIsEditMode(true);
-    setEditStatus(status);
+    setEditStatus(currentStatus);
   };
 
   const handleSave = () => {
+    if (!id) return;
+    
     // If changing to DITOLAK, show rejection reason modal
-    if (editStatus === "DITOLAK" && status !== "DITOLAK") {
+    if (editStatus === "DITOLAK" && currentStatus !== "DITOLAK") {
       setShowConfirmTolak(true);
       return;
     }
     
     // If changing to TERVERIFIKASI
-    if (editStatus === "TERVERIFIKASI" && status !== "TERVERIFIKASI") {
-      setStatus("TERVERIFIKASI");
+    if (editStatus === "TERVERIFIKASI" && currentStatus !== "TERVERIFIKASI") {
+      updateMitraStatus(id, "TERVERIFIKASI");
       setShowSuccessVerifikasi(true);
       setIsEditMode(false);
       return;
     }
     
     // If changing from DITOLAK to PENGAJUAN
-    if (editStatus === "PENGAJUAN" && status === "DITOLAK") {
+    if (editStatus === "PENGAJUAN" && currentStatus === "DITOLAK") {
       setShowUbahStatus(true);
       return;
     }
@@ -267,7 +122,8 @@ const DetailMitra = () => {
   };
 
   const handleSubmitTolak = () => {
-    setStatus("DITOLAK");
+    if (!id) return;
+    updateMitraStatus(id, "DITOLAK");
     setShowAlasanTolak(false);
     setShowSuccessTolak(true);
     setSelectedAlasan("");
@@ -276,7 +132,8 @@ const DetailMitra = () => {
   };
 
   const handleUbahKeProses = () => {
-    setStatus("PENGAJUAN");
+    if (!id) return;
+    updateMitraStatus(id, "PENGAJUAN");
     setEditStatus("PENGAJUAN");
     setShowUbahStatus(false);
     setSelectedAlasanPerubahan("");
@@ -345,7 +202,7 @@ const DetailMitra = () => {
                   </Select>
                 ) : (
                   <div className="flex items-center gap-2">
-                    {getStatusBadge(status)}
+                    {getStatusBadge(currentStatus)}
                     {isBlocked && (
                       <span className="text-xs text-muted-foreground">(Status tidak dapat diubah)</span>
                     )}

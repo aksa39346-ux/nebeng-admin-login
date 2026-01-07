@@ -12,6 +12,7 @@ import { id as localeId } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import * as XLSX from "xlsx";
 import BlockMitraPopup from "@/components/BlockMitraPopup";
+import { useMitra } from "@/contexts/MitraContext";
 import {
   Select,
   SelectContent,
@@ -19,20 +20,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
-// Initial sample data dengan berbagai status dan tanggal
-const initialMitraData = [
-  { id: "100001", nama: "Muhammad Abdul", email: "dul22345@gmail.com", noTlp: "089563245757", layanan: "Motor", status: "PENGAJUAN", tanggal: new Date(2024, 0, 15) },
-  { id: "100002", nama: "Ahmad Rizki", email: "ahmad.rizki@gmail.com", noTlp: "081234567890", layanan: "Mobil", status: "TERVERIFIKASI", tanggal: new Date(2024, 0, 20) },
-  { id: "100003", nama: "Budi Santoso", email: "budi.santoso@gmail.com", noTlp: "082345678901", layanan: "Titip Barang", status: "DITOLAK", tanggal: new Date(2024, 1, 5) },
-  { id: "100004", nama: "Dewi Kartika", email: "dewi.k@gmail.com", noTlp: "083456789012", layanan: "Motor", status: "PENGAJUAN", tanggal: new Date(2024, 1, 10) },
-  { id: "100005", nama: "Eko Prasetyo", email: "eko.pras@gmail.com", noTlp: "084567890123", layanan: "Mobil", status: "TERVERIFIKASI", tanggal: new Date(2024, 1, 15) },
-  { id: "100006", nama: "Fitri Handayani", email: "fitri.h@gmail.com", noTlp: "085678901234", layanan: "Barang", status: "DITOLAK", tanggal: new Date(2024, 2, 1) },
-  { id: "100007", nama: "Gilang Ramadhan", email: "gilang.r@gmail.com", noTlp: "086789012345", layanan: "Motor", status: "PENGAJUAN", tanggal: new Date(2024, 2, 10) },
-  { id: "100008", nama: "Hendra Wijaya", email: "hendra.w@gmail.com", noTlp: "087890123456", layanan: "Mobil", status: "TERVERIFIKASI", tanggal: new Date(2024, 2, 15) },
-  { id: "100009", nama: "Indah Permata", email: "indah.p@gmail.com", noTlp: "088901234567", layanan: "Motor", status: "PENGAJUAN", tanggal: new Date(2024, 3, 1) },
-  { id: "100010", nama: "Joko Susilo", email: "joko.s@gmail.com", noTlp: "089012345678", layanan: "Barang", status: "DITOLAK", tanggal: new Date(2024, 3, 5) },
-];
 
 const getStatusBadge = (status: string) => {
   switch (status) {
@@ -51,19 +38,19 @@ const getStatusBadge = (status: string) => {
 
 const VerifikasiMitra = () => {
   const navigate = useNavigate();
-  const [mitraData, setMitraData] = useState(initialMitraData);
+  const { mitraList, blockMitra } = useMitra();
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [entriesPerPage, setEntriesPerPage] = useState("10");
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
-  const [statusFilter, setStatusFilter] = useState<string>("AKTIF"); // AKTIF = semua kecuali DIBLOCK
+  const [statusFilter, setStatusFilter] = useState<string>("AKTIF");
   const [blockPopupOpen, setBlockPopupOpen] = useState(false);
   const [blockSuccessOpen, setBlockSuccessOpen] = useState(false);
   const [selectedMitraId, setSelectedMitraId] = useState<string | null>(null);
 
   // Filter data based on search, date, and status filter
   const filteredData = useMemo(() => {
-    return mitraData.filter((mitra) => {
+    return mitraList.filter((mitra) => {
       const matchesSearch = searchQuery === "" || 
         mitra.nama.toLowerCase().includes(searchQuery.toLowerCase()) ||
         mitra.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -77,7 +64,6 @@ const VerifikasiMitra = () => {
          mitra.tanggal.getMonth() === selectedDate.getMonth() &&
          mitra.tanggal.getDate() === selectedDate.getDate());
 
-      // Status filter: AKTIF shows all except DIBLOCK, DIBLOCK shows only blocked
       const matchesStatus = 
         statusFilter === "SEMUA" ||
         (statusFilter === "AKTIF" && mitra.status !== "DIBLOCK") ||
@@ -85,7 +71,7 @@ const VerifikasiMitra = () => {
 
       return matchesSearch && matchesDate && matchesStatus;
     });
-  }, [mitraData, searchQuery, selectedDate, statusFilter]);
+  }, [mitraList, searchQuery, selectedDate, statusFilter]);
 
   // Pagination
   const itemsPerPage = parseInt(entriesPerPage);
@@ -115,7 +101,6 @@ const VerifikasiMitra = () => {
       return;
     }
 
-    // Prepare data for Excel
     const excelData = dataToExport.map(mitra => ({
       "NO. ID": mitra.id,
       "NAMA": mitra.nama,
@@ -126,26 +111,22 @@ const VerifikasiMitra = () => {
       "TANGGAL": format(mitra.tanggal, "dd-MM-yyyy")
     }));
 
-    // Create worksheet
     const worksheet = XLSX.utils.json_to_sheet(excelData);
 
-    // Auto-fit column widths
     const columnWidths = [
-      { wch: 10 },  // NO. ID
-      { wch: 25 },  // NAMA
-      { wch: 30 },  // EMAIL
-      { wch: 15 },  // NO. TLP
-      { wch: 15 },  // LAYANAN
-      { wch: 15 },  // STATUS
-      { wch: 12 },  // TANGGAL
+      { wch: 10 },
+      { wch: 25 },
+      { wch: 30 },
+      { wch: 15 },
+      { wch: 15 },
+      { wch: 15 },
+      { wch: 12 },
     ];
     worksheet["!cols"] = columnWidths;
 
-    // Create workbook
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Data Mitra");
 
-    // Download file
     XLSX.writeFile(workbook, `data-mitra-${format(new Date(), "yyyy-MM-dd")}.xlsx`);
   };
 
@@ -157,15 +138,8 @@ const VerifikasiMitra = () => {
 
   const handleBlockConfirm = () => {
     setBlockPopupOpen(false);
-    // Update the mitra status to DIBLOCK
     if (selectedMitraId) {
-      setMitraData(prevData => 
-        prevData.map(mitra => 
-          mitra.id === selectedMitraId 
-            ? { ...mitra, status: "DIBLOCK" } 
-            : mitra
-        )
-      );
+      blockMitra(selectedMitraId);
     }
     setBlockSuccessOpen(true);
   };
@@ -301,6 +275,7 @@ const VerifikasiMitra = () => {
                             size="icon" 
                             className="h-8 w-8 bg-red-600 hover:bg-red-700"
                             onClick={() => handleBlockClick(mitra.id)}
+                            disabled={mitra.status === "DIBLOCK"}
                           >
                             <Lock size={18} className="text-white" />
                           </Button>
