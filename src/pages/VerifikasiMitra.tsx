@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Search, Calendar, Download, Eye, Trash2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -12,21 +13,35 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-// Sample data
+// Sample data dengan berbagai status
 const mitraData = [
-  { id: "100092", nama: "Muhammda Abdul", email: "dul22345@gmail.com", noTlp: "089563245757", layanan: "Motor", status: "PENGAJUAN" },
-  { id: "100092", nama: "Muhammda Abdul", email: "dul22345@gmail.com", noTlp: "089563245757", layanan: "Mobil", status: "PENGAJUAN" },
-  { id: "100092", nama: "Muhammda Abdul", email: "dul22345@gmail.com", noTlp: "089563245757", layanan: "Titip Barang", status: "PENGAJUAN" },
-  { id: "100092", nama: "Muhammda Abdul", email: "dul22345@gmail.com", noTlp: "089563245757", layanan: "Barang", status: "PENGAJUAN" },
-  { id: "100092", nama: "Muhammda Abdul", email: "dul22345@gmail.com", noTlp: "089563245757", layanan: "Mobil", status: "PENGAJUAN" },
-  { id: "100092", nama: "Muhammda Abdul", email: "dul22345@gmail.com", noTlp: "089563245757", layanan: "Motor", status: "PENGAJUAN" },
-  { id: "100092", nama: "Muhammda Abdul", email: "dul22345@gmail.com", noTlp: "089563245757", layanan: "Barang", status: "PENGAJUAN" },
-  { id: "100092", nama: "Muhammda Abdul", email: "dul22345@gmail.com", noTlp: "089563245757", layanan: "Mobil", status: "PENGAJUAN" },
-  { id: "100092", nama: "Muhammda Abdul", email: "dul22345@gmail.com", noTlp: "089563245757", layanan: "Motor", status: "PENGAJUAN" },
-  { id: "100092", nama: "Muhammda Abdul", email: "dul22345@gmail.com", noTlp: "089563245757", layanan: "Mobil", status: "PENGAJUAN" },
+  { id: "100001", nama: "Muhammad Abdul", email: "dul22345@gmail.com", noTlp: "089563245757", layanan: "Motor", status: "PENGAJUAN" },
+  { id: "100002", nama: "Ahmad Rizki", email: "ahmad.rizki@gmail.com", noTlp: "081234567890", layanan: "Mobil", status: "TERVERIFIKASI" },
+  { id: "100003", nama: "Budi Santoso", email: "budi.santoso@gmail.com", noTlp: "082345678901", layanan: "Titip Barang", status: "DITOLAK" },
+  { id: "100004", nama: "Dewi Kartika", email: "dewi.k@gmail.com", noTlp: "083456789012", layanan: "Motor", status: "PENGAJUAN" },
+  { id: "100005", nama: "Eko Prasetyo", email: "eko.pras@gmail.com", noTlp: "084567890123", layanan: "Mobil", status: "TERVERIFIKASI" },
+  { id: "100006", nama: "Fitri Handayani", email: "fitri.h@gmail.com", noTlp: "085678901234", layanan: "Barang", status: "DITOLAK" },
+  { id: "100007", nama: "Gilang Ramadhan", email: "gilang.r@gmail.com", noTlp: "086789012345", layanan: "Motor", status: "PENGAJUAN" },
+  { id: "100008", nama: "Hendra Wijaya", email: "hendra.w@gmail.com", noTlp: "087890123456", layanan: "Mobil", status: "TERVERIFIKASI" },
+  { id: "100009", nama: "Indah Permata", email: "indah.p@gmail.com", noTlp: "088901234567", layanan: "Motor", status: "PENGAJUAN" },
+  { id: "100010", nama: "Joko Susilo", email: "joko.s@gmail.com", noTlp: "089012345678", layanan: "Barang", status: "DITOLAK" },
 ];
 
+const getStatusBadge = (status: string) => {
+  switch (status) {
+    case "PENGAJUAN":
+      return <Badge className="bg-orange-500 hover:bg-orange-600 text-white text-xs">PENGAJUAN</Badge>;
+    case "TERVERIFIKASI":
+      return <Badge className="bg-green-500 hover:bg-green-600 text-white text-xs">TERVERIFIKASI</Badge>;
+    case "DITOLAK":
+      return <Badge className="bg-red-500 hover:bg-red-600 text-white text-xs">DITOLAK</Badge>;
+    default:
+      return <Badge className="bg-gray-500 text-white text-xs">{status}</Badge>;
+  }
+};
+
 const VerifikasiMitra = () => {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [entriesPerPage, setEntriesPerPage] = useState("10");
@@ -86,13 +101,16 @@ const VerifikasiMitra = () => {
                     <td className="py-4 px-4">{mitra.noTlp}</td>
                     <td className="py-4 px-4">{mitra.layanan}</td>
                     <td className="py-4 px-4">
-                      <Badge className="bg-orange-500 hover:bg-orange-600 text-white text-xs">
-                        {mitra.status}
-                      </Badge>
+                      {getStatusBadge(mitra.status)}
                     </td>
                     <td className="py-4 px-4">
                       <div className="flex items-center justify-center gap-2">
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-8 w-8"
+                          onClick={() => navigate(`/dashboard/verifikasi-mitra/${mitra.id}`)}
+                        >
                           <Eye size={18} className="text-primary" />
                         </Button>
                         <Button variant="ghost" size="icon" className="h-8 w-8">
