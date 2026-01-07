@@ -11,11 +11,11 @@ import { usePesanan } from "@/contexts/PesananContext";
 const getStatusBadge = (status: string) => {
   switch (status) {
     case "SELESAI":
-      return <Badge className="bg-green-500 hover:bg-green-600 text-white text-xs px-3">Proses</Badge>;
+      return <Badge className="bg-green-500 hover:bg-green-600 text-white text-xs px-3">Selesai</Badge>;
     case "BATAL":
       return <Badge className="bg-red-500 hover:bg-red-600 text-white text-xs px-3">Batal</Badge>;
     case "PROSES":
-      return <Badge className="bg-orange-500 hover:bg-orange-600 text-white text-xs px-3">Selese</Badge>;
+      return <Badge className="bg-orange-500 hover:bg-orange-600 text-white text-xs px-3">Proses</Badge>;
     default:
       return <Badge className="bg-gray-500 text-white text-xs px-3">{status}</Badge>;
   }
