@@ -436,8 +436,8 @@ const initialPesananDetail: Record<string, PesananDetailData> = {
 
 interface PesananContextType {
   pesananList: PesananData[];
-  pesananDetail: Record<string, PesananDetailData>;
-  getPesananDetail: (id: string) => PesananDetailData | undefined;
+  pesananDetail: Record<string, Omit<PesananDetailData, 'status'>>;
+  getPesananDetail: (id: string) => (PesananDetailData & { status: "PROSES" | "SELESAI" | "BATAL" }) | undefined;
 }
 
 const PesananContext = createContext<PesananContextType | undefined>(undefined);
@@ -446,8 +446,26 @@ export const PesananProvider = ({ children }: { children: ReactNode }) => {
   const [pesananList] = useState<PesananData[]>(initialPesananList);
   const [pesananDetail] = useState<Record<string, PesananDetailData>>(initialPesananDetail);
 
+  // Get detail with status from list (single source of truth)
   const getPesananDetail = (id: string) => {
-    return pesananDetail[id];
+    const detail = pesananDetail[id];
+    const listItem = pesananList.find(p => p.id === id);
+    
+    if (!detail || !listItem) return undefined;
+    
+    // Return detail with status from the list (single source of truth)
+    return {
+      ...detail,
+      status: listItem.status,
+      customer: {
+        ...detail.customer,
+        nama: listItem.namaCustomer,
+      },
+      mitra: {
+        ...detail.mitra,
+        nama: listItem.namaDriver,
+      },
+    };
   };
 
   return (
