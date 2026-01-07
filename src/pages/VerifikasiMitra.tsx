@@ -1,10 +1,15 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, Calendar, Download, Eye, Trash2 } from "lucide-react";
+import { Search, Calendar as CalendarIcon, Download, Eye, Trash2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { format } from "date-fns";
+import { id as localeId } from "date-fns/locale";
+import { cn } from "@/lib/utils";
 import {
   Select,
   SelectContent,
@@ -13,18 +18,18 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-// Sample data dengan berbagai status
+// Sample data dengan berbagai status dan tanggal
 const mitraData = [
-  { id: "100001", nama: "Muhammad Abdul", email: "dul22345@gmail.com", noTlp: "089563245757", layanan: "Motor", status: "PENGAJUAN" },
-  { id: "100002", nama: "Ahmad Rizki", email: "ahmad.rizki@gmail.com", noTlp: "081234567890", layanan: "Mobil", status: "TERVERIFIKASI" },
-  { id: "100003", nama: "Budi Santoso", email: "budi.santoso@gmail.com", noTlp: "082345678901", layanan: "Titip Barang", status: "DITOLAK" },
-  { id: "100004", nama: "Dewi Kartika", email: "dewi.k@gmail.com", noTlp: "083456789012", layanan: "Motor", status: "PENGAJUAN" },
-  { id: "100005", nama: "Eko Prasetyo", email: "eko.pras@gmail.com", noTlp: "084567890123", layanan: "Mobil", status: "TERVERIFIKASI" },
-  { id: "100006", nama: "Fitri Handayani", email: "fitri.h@gmail.com", noTlp: "085678901234", layanan: "Barang", status: "DITOLAK" },
-  { id: "100007", nama: "Gilang Ramadhan", email: "gilang.r@gmail.com", noTlp: "086789012345", layanan: "Motor", status: "PENGAJUAN" },
-  { id: "100008", nama: "Hendra Wijaya", email: "hendra.w@gmail.com", noTlp: "087890123456", layanan: "Mobil", status: "TERVERIFIKASI" },
-  { id: "100009", nama: "Indah Permata", email: "indah.p@gmail.com", noTlp: "088901234567", layanan: "Motor", status: "PENGAJUAN" },
-  { id: "100010", nama: "Joko Susilo", email: "joko.s@gmail.com", noTlp: "089012345678", layanan: "Barang", status: "DITOLAK" },
+  { id: "100001", nama: "Muhammad Abdul", email: "dul22345@gmail.com", noTlp: "089563245757", layanan: "Motor", status: "PENGAJUAN", tanggal: new Date(2024, 0, 15) },
+  { id: "100002", nama: "Ahmad Rizki", email: "ahmad.rizki@gmail.com", noTlp: "081234567890", layanan: "Mobil", status: "TERVERIFIKASI", tanggal: new Date(2024, 0, 20) },
+  { id: "100003", nama: "Budi Santoso", email: "budi.santoso@gmail.com", noTlp: "082345678901", layanan: "Titip Barang", status: "DITOLAK", tanggal: new Date(2024, 1, 5) },
+  { id: "100004", nama: "Dewi Kartika", email: "dewi.k@gmail.com", noTlp: "083456789012", layanan: "Motor", status: "PENGAJUAN", tanggal: new Date(2024, 1, 10) },
+  { id: "100005", nama: "Eko Prasetyo", email: "eko.pras@gmail.com", noTlp: "084567890123", layanan: "Mobil", status: "TERVERIFIKASI", tanggal: new Date(2024, 1, 15) },
+  { id: "100006", nama: "Fitri Handayani", email: "fitri.h@gmail.com", noTlp: "085678901234", layanan: "Barang", status: "DITOLAK", tanggal: new Date(2024, 2, 1) },
+  { id: "100007", nama: "Gilang Ramadhan", email: "gilang.r@gmail.com", noTlp: "086789012345", layanan: "Motor", status: "PENGAJUAN", tanggal: new Date(2024, 2, 10) },
+  { id: "100008", nama: "Hendra Wijaya", email: "hendra.w@gmail.com", noTlp: "087890123456", layanan: "Mobil", status: "TERVERIFIKASI", tanggal: new Date(2024, 2, 15) },
+  { id: "100009", nama: "Indah Permata", email: "indah.p@gmail.com", noTlp: "088901234567", layanan: "Motor", status: "PENGAJUAN", tanggal: new Date(2024, 3, 1) },
+  { id: "100010", nama: "Joko Susilo", email: "joko.s@gmail.com", noTlp: "089012345678", layanan: "Barang", status: "DITOLAK", tanggal: new Date(2024, 3, 5) },
 ];
 
 const getStatusBadge = (status: string) => {
@@ -45,8 +50,97 @@ const VerifikasiMitra = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [entriesPerPage, setEntriesPerPage] = useState("10");
-  const totalEntries = 120;
-  const totalPages = 6;
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+
+  // Filter data based on search and date
+  const filteredData = useMemo(() => {
+    return mitraData.filter((mitra) => {
+      const matchesSearch = searchQuery === "" || 
+        mitra.nama.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        mitra.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        mitra.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        mitra.noTlp.includes(searchQuery) ||
+        mitra.layanan.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        mitra.status.toLowerCase().includes(searchQuery.toLowerCase());
+
+      const matchesDate = !selectedDate || 
+        (mitra.tanggal.getFullYear() === selectedDate.getFullYear() &&
+         mitra.tanggal.getMonth() === selectedDate.getMonth() &&
+         mitra.tanggal.getDate() === selectedDate.getDate());
+
+      return matchesSearch && matchesDate;
+    });
+  }, [searchQuery, selectedDate]);
+
+  // Pagination
+  const itemsPerPage = parseInt(entriesPerPage);
+  const totalEntries = filteredData.length;
+  const totalPages = Math.ceil(totalEntries / itemsPerPage);
+  const paginatedData = filteredData.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  // Reset to page 1 when search or date changes
+  const handleSearchChange = (value: string) => {
+    setSearchQuery(value);
+    setCurrentPage(1);
+  };
+
+  const handleDateChange = (date: Date | undefined) => {
+    setSelectedDate(date);
+    setCurrentPage(1);
+  };
+
+  // Download CSV function
+  const handleDownload = () => {
+    const dataToExport = filteredData;
+    
+    if (dataToExport.length === 0) {
+      return;
+    }
+
+    const headers = ["NO. ID", "NAMA", "EMAIL", "NO. TLP", "LAYANAN", "STATUS", "TANGGAL"];
+    const csvContent = [
+      headers.join(","),
+      ...dataToExport.map(mitra => [
+        mitra.id,
+        `"${mitra.nama}"`,
+        mitra.email,
+        mitra.noTlp,
+        mitra.layanan,
+        mitra.status,
+        format(mitra.tanggal, "dd-MM-yyyy")
+      ].join(","))
+    ].join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `data-mitra-${format(new Date(), "yyyy-MM-dd")}.csv`);
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // Generate page numbers for pagination
+  const getPageNumbers = () => {
+    const pages: (number | string)[] = [];
+    if (totalPages <= 5) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      if (currentPage <= 3) {
+        pages.push(1, 2, 3, "...", totalPages);
+      } else if (currentPage >= totalPages - 2) {
+        pages.push(1, "...", totalPages - 2, totalPages - 1, totalPages);
+      } else {
+        pages.push(1, "...", currentPage, "...", totalPages);
+      }
+    }
+    return pages;
+  };
 
   return (
     <div className="space-y-6">
@@ -60,18 +154,43 @@ const VerifikasiMitra = () => {
             <div className="relative w-72">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
               <Input
-                placeholder="Search"
+                placeholder="Search nama, email, ID, layanan..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => handleSearchChange(e.target.value)}
                 className="pl-10 h-10 bg-background border-border"
               />
             </div>
             <div className="flex items-center gap-3">
-              <Button variant="outline" className="gap-2">
-                <Calendar size={18} />
-                Kalender
-              </Button>
-              <Button className="gap-2 bg-primary">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className={cn("gap-2", selectedDate && "text-primary border-primary")}>
+                    <CalendarIcon size={18} />
+                    {selectedDate ? format(selectedDate, "dd MMM yyyy", { locale: localeId }) : "Kalender"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="end">
+                  <Calendar
+                    mode="single"
+                    selected={selectedDate}
+                    onSelect={handleDateChange}
+                    initialFocus
+                    className="p-3 pointer-events-auto"
+                  />
+                  {selectedDate && (
+                    <div className="p-2 border-t">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="w-full"
+                        onClick={() => handleDateChange(undefined)}
+                      >
+                        Reset Filter Tanggal
+                      </Button>
+                    </div>
+                  )}
+                </PopoverContent>
+              </Popover>
+              <Button className="gap-2 bg-primary" onClick={handleDownload} disabled={filteredData.length === 0}>
                 <Download size={18} />
                 Download
               </Button>
@@ -93,33 +212,41 @@ const VerifikasiMitra = () => {
                 </tr>
               </thead>
               <tbody>
-                {mitraData.map((mitra, index) => (
-                  <tr key={index} className="border-b border-border/50 hover:bg-muted/30">
-                    <td className="py-4 px-4">{mitra.id}</td>
-                    <td className="py-4 px-4">{mitra.nama}</td>
-                    <td className="py-4 px-4 text-primary">{mitra.email}</td>
-                    <td className="py-4 px-4">{mitra.noTlp}</td>
-                    <td className="py-4 px-4">{mitra.layanan}</td>
-                    <td className="py-4 px-4">
-                      {getStatusBadge(mitra.status)}
-                    </td>
-                    <td className="py-4 px-4">
-                      <div className="flex items-center justify-center gap-2">
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="h-8 w-8"
-                          onClick={() => navigate(`/dashboard/verifikasi-mitra/${mitra.id}`)}
-                        >
-                          <Eye size={18} className="text-primary" />
-                        </Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                          <Trash2 size={18} className="text-red-500" />
-                        </Button>
-                      </div>
+                {paginatedData.length > 0 ? (
+                  paginatedData.map((mitra, index) => (
+                    <tr key={index} className="border-b border-border/50 hover:bg-muted/30">
+                      <td className="py-4 px-4">{mitra.id}</td>
+                      <td className="py-4 px-4">{mitra.nama}</td>
+                      <td className="py-4 px-4 text-primary">{mitra.email}</td>
+                      <td className="py-4 px-4">{mitra.noTlp}</td>
+                      <td className="py-4 px-4">{mitra.layanan}</td>
+                      <td className="py-4 px-4">
+                        {getStatusBadge(mitra.status)}
+                      </td>
+                      <td className="py-4 px-4">
+                        <div className="flex items-center justify-center gap-2">
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-8 w-8"
+                            onClick={() => navigate(`/dashboard/verifikasi-mitra/${mitra.id}`)}
+                          >
+                            <Eye size={18} className="text-primary" />
+                          </Button>
+                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <Trash2 size={18} className="text-red-500" />
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={7} className="py-8 text-center text-muted-foreground">
+                      Tidak ada data yang ditemukan
                     </td>
                   </tr>
-                ))}
+                )}
               </tbody>
             </table>
           </div>
@@ -127,7 +254,7 @@ const VerifikasiMitra = () => {
           {/* Pagination */}
           <div className="flex items-center justify-between mt-6">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Select value={entriesPerPage} onValueChange={setEntriesPerPage}>
+              <Select value={entriesPerPage} onValueChange={(value) => { setEntriesPerPage(value); setCurrentPage(1); }}>
                 <SelectTrigger className="w-16 h-8">
                   <SelectValue />
                 </SelectTrigger>
@@ -149,31 +276,26 @@ const VerifikasiMitra = () => {
               >
                 &lt;
               </Button>
-              {[1, 2, 3].map((page) => (
-                <Button
-                  key={page}
-                  variant={currentPage === page ? "default" : "ghost"}
-                  size="icon"
-                  className={`h-8 w-8 ${currentPage === page ? "bg-primary text-white" : ""}`}
-                  onClick={() => setCurrentPage(page)}
-                >
-                  {page}
-                </Button>
+              {getPageNumbers().map((page, idx) => (
+                typeof page === "number" ? (
+                  <Button
+                    key={idx}
+                    variant={currentPage === page ? "default" : "ghost"}
+                    size="icon"
+                    className={`h-8 w-8 ${currentPage === page ? "bg-primary text-white" : ""}`}
+                    onClick={() => setCurrentPage(page)}
+                  >
+                    {page}
+                  </Button>
+                ) : (
+                  <span key={idx} className="px-2 text-muted-foreground">{page}</span>
+                )
               ))}
-              <span className="px-2 text-muted-foreground">...</span>
               <Button
                 variant="ghost"
                 size="icon"
                 className="h-8 w-8"
-                onClick={() => setCurrentPage(totalPages)}
-              >
-                {totalPages}
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8"
-                disabled={currentPage === totalPages}
+                disabled={currentPage === totalPages || totalPages === 0}
                 onClick={() => setCurrentPage(currentPage + 1)}
               >
                 &gt;
