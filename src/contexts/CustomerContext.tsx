@@ -13,7 +13,7 @@ export interface CustomerDetailData {
   id: string;
   nama: string;
   kode: string;
-  status: "PENGAJUAN" | "TERVERIFIKASI" | "DITOLAK";
+  status: "PENGAJUAN" | "TERVERIFIKASI" | "DITOLAK" | "DIBLOCK";
   informasiPribadi: {
     namaLengkap: string;
     email: string;
@@ -262,8 +262,10 @@ const initialCustomerDetail: Record<string, CustomerDetailData> = {
 interface CustomerContextType {
   customerList: CustomerData[];
   customerDetail: Record<string, CustomerDetailData>;
-  updateCustomerStatus: (id: string, status: "PENGAJUAN" | "TERVERIFIKASI" | "DITOLAK") => void;
+  updateCustomerStatus: (id: string, status: "PENGAJUAN" | "TERVERIFIKASI" | "DITOLAK" | "DIBLOCK") => void;
   updateCustomerInfo: (id: string, info: CustomerDetailData["informasiPribadi"]) => void;
+  blockCustomer: (id: string) => void;
+  unblockCustomer: (id: string) => void;
 }
 
 const CustomerContext = createContext<CustomerContextType | undefined>(undefined);
@@ -272,7 +274,7 @@ export const CustomerProvider = ({ children }: { children: ReactNode }) => {
   const [customerList, setCustomerList] = useState<CustomerData[]>(initialCustomerList);
   const [customerDetail, setCustomerDetail] = useState<Record<string, CustomerDetailData>>(initialCustomerDetail);
 
-  const updateCustomerStatus = (id: string, status: "PENGAJUAN" | "TERVERIFIKASI" | "DITOLAK") => {
+  const updateCustomerStatus = (id: string, status: "PENGAJUAN" | "TERVERIFIKASI" | "DITOLAK" | "DIBLOCK") => {
     setCustomerList(prev => 
       prev.map(customer => 
         customer.id === id ? { ...customer, status } : customer
@@ -288,6 +290,14 @@ export const CustomerProvider = ({ children }: { children: ReactNode }) => {
       }
       return prev;
     });
+  };
+
+  const blockCustomer = (id: string) => {
+    updateCustomerStatus(id, "DIBLOCK");
+  };
+
+  const unblockCustomer = (id: string) => {
+    updateCustomerStatus(id, "TERVERIFIKASI");
   };
 
   const updateCustomerInfo = (id: string, info: CustomerDetailData["informasiPribadi"]) => {
@@ -317,7 +327,7 @@ export const CustomerProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <CustomerContext.Provider value={{ customerList, customerDetail, updateCustomerStatus, updateCustomerInfo }}>
+    <CustomerContext.Provider value={{ customerList, customerDetail, updateCustomerStatus, updateCustomerInfo, blockCustomer, unblockCustomer }}>
       {children}
     </CustomerContext.Provider>
   );

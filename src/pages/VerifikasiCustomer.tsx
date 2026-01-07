@@ -28,6 +28,8 @@ const getStatusBadge = (status: string) => {
       return <Badge className="bg-red-500 hover:bg-red-600 text-white text-xs">DITOLAK</Badge>;
     case "PENGAJUAN":
       return <Badge className="bg-orange-500 hover:bg-orange-600 text-white text-xs">PENGAJUAN</Badge>;
+    case "DIBLOCK":
+      return <Badge className="bg-gray-500 hover:bg-gray-600 text-white text-xs">DIBLOCK</Badge>;
     default:
       return <Badge className="bg-gray-500 text-white text-xs">{status}</Badge>;
   }
@@ -170,6 +172,7 @@ const VerifikasiCustomer = () => {
                   <SelectItem value="PENGAJUAN">Pengajuan</SelectItem>
                   <SelectItem value="TERVERIFIKASI">Terverifikasi</SelectItem>
                   <SelectItem value="DITOLAK">Ditolak</SelectItem>
+                  <SelectItem value="DIBLOCK">Diblock</SelectItem>
                 </SelectContent>
               </Select>
 
