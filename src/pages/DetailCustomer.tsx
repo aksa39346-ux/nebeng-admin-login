@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ChevronLeft, Calendar, Edit, Check, X, CheckCircle, XCircle } from "lucide-react";
+import { ChevronLeft, Calendar, Edit, Check, X, CheckCircle, XCircle, Lock, LockOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -10,8 +10,10 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import ktpPlaceholder from "@/assets/ktp-placeholder.png";
+import BlockCustomerPopup from "@/components/BlockCustomerPopup";
+import UnblockCustomerPopup from "@/components/UnblockCustomerPopup";
 
-const getStatusBadge = (status: "PENGAJUAN" | "TERVERIFIKASI" | "DITOLAK") => {
+const getStatusBadge = (status: "PENGAJUAN" | "TERVERIFIKASI" | "DITOLAK" | "DIBLOCK") => {
   switch (status) {
     case "TERVERIFIKASI":
       return <Badge className="bg-green-500 hover:bg-green-600 text-white text-xs">Terverifikasi</Badge>;
@@ -19,6 +21,8 @@ const getStatusBadge = (status: "PENGAJUAN" | "TERVERIFIKASI" | "DITOLAK") => {
       return <Badge className="bg-red-500 hover:bg-red-600 text-white text-xs">Ditolak</Badge>;
     case "PENGAJUAN":
       return <Badge className="bg-orange-500 hover:bg-orange-600 text-white text-xs">Pengajuan</Badge>;
+    case "DIBLOCK":
+      return <Badge className="bg-gray-500 hover:bg-gray-600 text-white text-xs">Diblock</Badge>;
     default:
       return null;
   }
@@ -27,11 +31,12 @@ const getStatusBadge = (status: "PENGAJUAN" | "TERVERIFIKASI" | "DITOLAK") => {
 const DetailCustomer = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { customerDetail, updateCustomerStatus, updateCustomerInfo } = useCustomer();
+  const { customerDetail, updateCustomerStatus, updateCustomerInfo, blockCustomer, unblockCustomer } = useCustomer();
   const { toast } = useToast();
   
   const customer = id ? customerDetail[id] : null;
-  
+  const currentStatus = customer?.status || "PENGAJUAN";
+  const isBlocked = currentStatus === "DIBLOCK";
   // Edit mode state
   const [isEditMode, setIsEditMode] = useState(false);
   const [editData, setEditData] = useState({
@@ -50,6 +55,10 @@ const DetailCustomer = () => {
   const [showTolakModal, setShowTolakModal] = useState(false);
   const [showEditSuccessModal, setShowEditSuccessModal] = useState(false);
   const [showKTPPreview, setShowKTPPreview] = useState(false);
+  const [showBlockConfirm, setShowBlockConfirm] = useState(false);
+  const [showBlockSuccess, setShowBlockSuccess] = useState(false);
+  const [showUnblockConfirm, setShowUnblockConfirm] = useState(false);
+  const [showUnblockSuccess, setShowUnblockSuccess] = useState(false);
   
   if (!customer) {
     return (
@@ -117,6 +126,20 @@ const DetailCustomer = () => {
     updateCustomerStatus(id, "DITOLAK");
     setShowConfirmTolak(false);
     setShowTolakModal(true);
+  };
+
+  const handleBlock = () => {
+    if (!id) return;
+    blockCustomer(id);
+    setShowBlockConfirm(false);
+    setShowBlockSuccess(true);
+  };
+
+  const handleUnblock = () => {
+    if (!id) return;
+    unblockCustomer(id);
+    setShowUnblockConfirm(false);
+    setShowUnblockSuccess(true);
   };
 
   return (
@@ -326,19 +349,39 @@ const DetailCustomer = () => {
 
         {/* Action Buttons */}
         <div className="mt-8 flex gap-4">
-          <Button 
-            className="bg-primary hover:bg-primary/90 text-primary-foreground px-8"
-            onClick={handleTerimaClick}
-          >
-            Terima
-          </Button>
-          <Button 
-            variant="outline"
-            className="border-red-500 text-red-500 hover:bg-red-50 px-8"
-            onClick={handleTolakClick}
-          >
-            Tolak
-          </Button>
+          {isBlocked ? (
+            <Button 
+              className="bg-green-600 hover:bg-green-700 text-white px-8 gap-2"
+              onClick={() => setShowUnblockConfirm(true)}
+            >
+              <LockOpen size={16} />
+              Unblock
+            </Button>
+          ) : (
+            <>
+              <Button 
+                className="bg-primary hover:bg-primary/90 text-primary-foreground px-8"
+                onClick={handleTerimaClick}
+              >
+                Terima
+              </Button>
+              <Button 
+                variant="outline"
+                className="border-red-500 text-red-500 hover:bg-red-50 px-8"
+                onClick={handleTolakClick}
+              >
+                Tolak
+              </Button>
+              <Button 
+                variant="outline"
+                className="border-gray-500 text-gray-700 hover:bg-gray-50 px-8 gap-2"
+                onClick={() => setShowBlockConfirm(true)}
+              >
+                <Lock size={16} />
+                Block
+              </Button>
+            </>
+          )}
         </div>
       </div>
 
@@ -527,6 +570,35 @@ const DetailCustomer = () => {
           </div>
         </DialogContent>
       </Dialog>
+      {/* Block Customer Popup */}
+      <BlockCustomerPopup
+        open={showBlockConfirm}
+        onOpenChange={setShowBlockConfirm}
+        onConfirm={handleBlock}
+        type="confirm"
+      />
+
+      <BlockCustomerPopup
+        open={showBlockSuccess}
+        onOpenChange={setShowBlockSuccess}
+        onConfirm={() => {}}
+        type="success"
+      />
+
+      {/* Unblock Customer Popup */}
+      <UnblockCustomerPopup
+        open={showUnblockConfirm}
+        onOpenChange={setShowUnblockConfirm}
+        onConfirm={handleUnblock}
+        type="confirm"
+      />
+
+      <UnblockCustomerPopup
+        open={showUnblockSuccess}
+        onOpenChange={setShowUnblockSuccess}
+        onConfirm={() => {}}
+        type="success"
+      />
     </div>
   );
 };
