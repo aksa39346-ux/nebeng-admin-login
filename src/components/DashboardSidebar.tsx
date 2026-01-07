@@ -37,7 +37,8 @@ const mainMenuItems: MenuItem[] = [
     icon: Briefcase,
     children: [
       { title: "Daftar Mitra", path: "/dashboard/mitra" },
-      { title: "Performa Mitra", path: "/dashboard/mitra-performa" },
+      { title: "Kendaraan Mitra", path: "/dashboard/mitra-kendaraan" },
+      { title: "Blokir", path: "/dashboard/mitra-blokir" },
     ],
   },
   {

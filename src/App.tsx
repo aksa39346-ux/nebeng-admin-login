@@ -12,6 +12,7 @@ import Dashboard from "./pages/Dashboard";
 import Profile from "./pages/Profile";
 import VerifikasiMitra from "./pages/VerifikasiMitra";
 import DetailMitra from "./pages/DetailMitra";
+import DaftarMitra from "./pages/DaftarMitra";
 import VerifikasiCustomer from "./pages/VerifikasiCustomer";
 import DetailCustomer from "./pages/DetailCustomer";
 import { MitraProvider } from "./contexts/MitraContext";
@@ -38,6 +39,8 @@ const App = () => (
                 <Route path="profile" element={<Profile />} />
                 <Route path="verifikasi-mitra" element={<VerifikasiMitra />} />
                 <Route path="verifikasi-mitra/:id" element={<DetailMitra />} />
+                <Route path="mitra" element={<DaftarMitra />} />
+                <Route path="mitra/:id" element={<DetailMitra />} />
                 <Route path="verifikasi-costumer" element={<VerifikasiCustomer />} />
                 <Route path="verifikasi-costumer/:id" element={<DetailCustomer />} />
               </Route>
