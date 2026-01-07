@@ -1,9 +1,11 @@
-import { useParams, useNavigate } from "react-router-dom";
-import { ChevronLeft, Edit, Search } from "lucide-react";
+import { useState } from "react";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
+import { ChevronLeft, Edit, Save, X, Search } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
+import { useToast } from "@/hooks/use-toast";
 
 // Sample data for the detail view
 const kendaraanDetail = {
@@ -26,9 +28,56 @@ const kendaraanDetail = {
 const DetailKendaraanMitra = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const { toast } = useToast();
+  
+  const isEditMode = searchParams.get("edit") === "true";
 
-  // In real app, fetch data based on id
-  const data = kendaraanDetail;
+  // Form state
+  const [formData, setFormData] = useState({
+    namaLengkap: kendaraanDetail.namaLengkap,
+    kendaraan: kendaraanDetail.kendaraan,
+    merkKendaraan: kendaraanDetail.merkKendaraan,
+    platKendaraan: kendaraanDetail.platKendaraan,
+    warnaKendaraan: kendaraanDetail.warnaKendaraan,
+    nomorPlatSTNK: kendaraanDetail.nomorPlatSTNK,
+    merkSTNK: kendaraanDetail.merkSTNK,
+    nomorRangka: kendaraanDetail.nomorRangka,
+    masaBerlaku: kendaraanDetail.masaBerlaku,
+  });
+
+  const handleInputChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleSave = () => {
+    // In real app, save to backend
+    toast({
+      title: "Berhasil",
+      description: "Data kendaraan berhasil diperbarui",
+    });
+    navigate(`/dashboard/mitra-kendaraan/${id}`);
+  };
+
+  const handleCancel = () => {
+    // Reset form data
+    setFormData({
+      namaLengkap: kendaraanDetail.namaLengkap,
+      kendaraan: kendaraanDetail.kendaraan,
+      merkKendaraan: kendaraanDetail.merkKendaraan,
+      platKendaraan: kendaraanDetail.platKendaraan,
+      warnaKendaraan: kendaraanDetail.warnaKendaraan,
+      nomorPlatSTNK: kendaraanDetail.nomorPlatSTNK,
+      merkSTNK: kendaraanDetail.merkSTNK,
+      nomorRangka: kendaraanDetail.nomorRangka,
+      masaBerlaku: kendaraanDetail.masaBerlaku,
+    });
+    navigate(`/dashboard/mitra-kendaraan/${id}`);
+  };
+
+  const handleEditClick = () => {
+    navigate(`/dashboard/mitra-kendaraan/${id}?edit=true`);
+  };
 
   return (
     <div className="space-y-6">
@@ -38,11 +87,13 @@ const DetailKendaraanMitra = () => {
           variant="ghost"
           size="icon"
           className="h-8 w-8"
-          onClick={() => navigate(-1)}
+          onClick={() => navigate("/dashboard/mitra-kendaraan")}
         >
           <ChevronLeft size={20} />
         </Button>
-        <h1 className="text-xl font-semibold">Detail Data Mitra</h1>
+        <h1 className="text-xl font-semibold">
+          {isEditMode ? "Edit Data Kendaraan" : "Detail Data Mitra"}
+        </h1>
       </div>
 
       <Card className="shadow-sm">
@@ -54,7 +105,7 @@ const DetailKendaraanMitra = () => {
                 <Avatar className="h-16 w-16">
                   <AvatarImage src="/placeholder.svg" />
                   <AvatarFallback className="bg-orange-100 text-orange-600 text-lg">
-                    {data.namaMitra.charAt(0)}
+                    {kendaraanDetail.namaMitra.charAt(0)}
                   </AvatarFallback>
                 </Avatar>
                 <div className="absolute -bottom-1 -right-1 bg-primary rounded-full p-1">
@@ -64,13 +115,24 @@ const DetailKendaraanMitra = () => {
                 </div>
               </div>
               <div>
-                <h2 className="text-lg font-semibold">{data.namaMitra}</h2>
+                <h2 className="text-lg font-semibold">{kendaraanDetail.namaMitra}</h2>
                 <p className="text-sm text-muted-foreground">Nebeng Motor</p>
               </div>
             </div>
-            <Button variant="outline" className="gap-2">
-              Edit <Edit size={16} />
-            </Button>
+            {isEditMode ? (
+              <div className="flex gap-2">
+                <Button variant="outline" className="gap-2" onClick={handleCancel}>
+                  <X size={16} /> Batal
+                </Button>
+                <Button className="gap-2 bg-green-600 hover:bg-green-700" onClick={handleSave}>
+                  <Save size={16} /> Simpan
+                </Button>
+              </div>
+            ) : (
+              <Button variant="outline" className="gap-2" onClick={handleEditClick}>
+                Edit <Edit size={16} />
+              </Button>
+            )}
           </div>
 
           {/* Informasi Pribadi */}
@@ -81,48 +143,53 @@ const DetailKendaraanMitra = () => {
                 <div className="space-y-2">
                   <label className="text-sm text-muted-foreground">Nama Lengkap</label>
                   <Input 
-                    value={data.namaLengkap} 
-                    readOnly 
-                    className="bg-muted/50 border-border"
+                    value={formData.namaLengkap} 
+                    readOnly={!isEditMode}
+                    onChange={(e) => handleInputChange("namaLengkap", e.target.value)}
+                    className={isEditMode ? "border-primary" : "bg-muted/50 border-border"}
                   />
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm text-muted-foreground">Kendaraan</label>
                   <Input 
-                    value={data.kendaraan} 
-                    readOnly 
-                    className="bg-muted/50 border-border"
+                    value={formData.kendaraan} 
+                    readOnly={!isEditMode}
+                    onChange={(e) => handleInputChange("kendaraan", e.target.value)}
+                    className={isEditMode ? "border-primary" : "bg-muted/50 border-border"}
                   />
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm text-muted-foreground">Merk Kendaraan</label>
                   <Input 
-                    value={data.merkKendaraan} 
-                    readOnly 
-                    className="bg-muted/50 border-border"
+                    value={formData.merkKendaraan} 
+                    readOnly={!isEditMode}
+                    onChange={(e) => handleInputChange("merkKendaraan", e.target.value)}
+                    className={isEditMode ? "border-primary" : "bg-muted/50 border-border"}
                   />
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm text-muted-foreground">Plat Kendaraan</label>
                   <Input 
-                    value={data.platKendaraan} 
-                    readOnly 
-                    className="bg-muted/50 border-border"
+                    value={formData.platKendaraan} 
+                    readOnly={!isEditMode}
+                    onChange={(e) => handleInputChange("platKendaraan", e.target.value)}
+                    className={isEditMode ? "border-primary" : "bg-muted/50 border-border"}
                   />
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm text-muted-foreground">Warna Kendaraan</label>
                   <Input 
-                    value={data.warnaKendaraan} 
-                    readOnly 
-                    className="bg-muted/50 border-border"
+                    value={formData.warnaKendaraan} 
+                    readOnly={!isEditMode}
+                    onChange={(e) => handleInputChange("warnaKendaraan", e.target.value)}
+                    className={isEditMode ? "border-primary" : "bg-muted/50 border-border"}
                   />
                 </div>
               </div>
               <div className="flex items-start justify-center lg:justify-end">
                 <div className="relative w-48 h-32 rounded-lg overflow-hidden bg-muted">
                   <img 
-                    src={data.fotoKendaraan} 
+                    src={kendaraanDetail.fotoKendaraan} 
                     alt="Foto Kendaraan" 
                     className="w-full h-full object-cover"
                   />
@@ -146,34 +213,38 @@ const DetailKendaraanMitra = () => {
                 <div className="space-y-2">
                   <label className="text-sm text-muted-foreground">Nomor Plat Kendaraan</label>
                   <Input 
-                    value={data.nomorPlatSTNK} 
-                    readOnly 
-                    className="bg-muted/50 border-border"
+                    value={formData.nomorPlatSTNK} 
+                    readOnly={!isEditMode}
+                    onChange={(e) => handleInputChange("nomorPlatSTNK", e.target.value)}
+                    className={isEditMode ? "border-primary" : "bg-muted/50 border-border"}
                   />
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm text-muted-foreground">MERK</label>
                   <Input 
-                    value={data.merkSTNK} 
-                    readOnly 
-                    className="bg-muted/50 border-border"
+                    value={formData.merkSTNK} 
+                    readOnly={!isEditMode}
+                    onChange={(e) => handleInputChange("merkSTNK", e.target.value)}
+                    className={isEditMode ? "border-primary" : "bg-muted/50 border-border"}
                   />
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm text-muted-foreground">Nomor Rangka</label>
                   <Input 
-                    value={data.nomorRangka} 
-                    readOnly 
-                    className="bg-muted/50 border-border"
+                    value={formData.nomorRangka} 
+                    readOnly={!isEditMode}
+                    onChange={(e) => handleInputChange("nomorRangka", e.target.value)}
+                    className={isEditMode ? "border-primary" : "bg-muted/50 border-border"}
                   />
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm text-muted-foreground">Masa Berlaku</label>
                   <div className="relative">
                     <Input 
-                      value={data.masaBerlaku} 
-                      readOnly 
-                      className="bg-muted/50 border-border pr-10"
+                      value={formData.masaBerlaku} 
+                      readOnly={!isEditMode}
+                      onChange={(e) => handleInputChange("masaBerlaku", e.target.value)}
+                      className={`pr-10 ${isEditMode ? "border-primary" : "bg-muted/50 border-border"}`}
                     />
                     <svg 
                       viewBox="0 0 24 24" 
@@ -193,7 +264,7 @@ const DetailKendaraanMitra = () => {
               <div className="flex items-start justify-center lg:justify-end">
                 <div className="relative w-48 h-32 rounded-lg overflow-hidden bg-muted">
                   <img 
-                    src={data.fotoSTNK} 
+                    src={kendaraanDetail.fotoSTNK} 
                     alt="Foto STNK" 
                     className="w-full h-full object-cover"
                   />
