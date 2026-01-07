@@ -92,7 +92,7 @@ const VerifikasiMitra = () => {
     setCurrentPage(1);
   };
 
-  // Download CSV function
+  // Download CSV function (using semicolon delimiter for Excel compatibility)
   const handleDownload = () => {
     const dataToExport = filteredData;
     
@@ -102,16 +102,16 @@ const VerifikasiMitra = () => {
 
     const headers = ["NO. ID", "NAMA", "EMAIL", "NO. TLP", "LAYANAN", "STATUS", "TANGGAL"];
     const csvContent = [
-      headers.join(","),
+      headers.join(";"),
       ...dataToExport.map(mitra => [
         mitra.id,
-        `"${mitra.nama}"`,
+        mitra.nama,
         mitra.email,
         mitra.noTlp,
         mitra.layanan,
         mitra.status,
         format(mitra.tanggal, "dd-MM-yyyy")
-      ].join(","))
+      ].join(";"))
     ].join("\n");
 
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
