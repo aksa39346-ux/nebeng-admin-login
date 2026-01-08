@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -14,6 +15,7 @@ import {
 import { Eye, EyeOff, Pencil, Calendar } from "lucide-react";
 
 const Pengaturan = () => {
+  const navigate = useNavigate();
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [isEditingPassword, setIsEditingPassword] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -60,7 +62,7 @@ const Pengaturan = () => {
               variant="outline"
               size="sm"
               className="text-primary border-primary hover:bg-primary/10"
-              onClick={() => setIsEditingProfile(!isEditingProfile)}
+              onClick={() => navigate("/dashboard/pengaturan/edit")}
             >
               Edit <Pencil className="ml-1 h-4 w-4" />
             </Button>
