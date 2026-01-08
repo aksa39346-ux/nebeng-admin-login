@@ -12,15 +12,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Eye, EyeOff, Calendar, Camera } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { Eye, EyeOff, Camera } from "lucide-react";
+import SavePengaturanPopup from "@/components/SavePengaturanPopup";
 
 const PengaturanEdit = () => {
   const navigate = useNavigate();
-  const { toast } = useToast();
   
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showSavePopup, setShowSavePopup] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   const [profileData, setProfileData] = useState({
     namaLengkap: "Muhammad Abdul Kadir",
@@ -36,12 +37,22 @@ const PengaturanEdit = () => {
     confirmPassword: "",
   });
 
-  const handleSave = () => {
-    toast({
-      title: "Berhasil",
-      description: "Perubahan profil berhasil disimpan",
-    });
+  const handleSaveClick = () => {
+    setShowSavePopup(true);
+  };
+
+  const handleConfirmSave = () => {
+    setShowSuccess(true);
+  };
+
+  const handleSuccessClose = () => {
+    setShowSavePopup(false);
+    setShowSuccess(false);
     navigate("/dashboard/pengaturan");
+  };
+
+  const handleCancelSave = () => {
+    setShowSavePopup(false);
   };
 
   const handleCancel = () => {
@@ -198,7 +209,7 @@ const PengaturanEdit = () => {
 
           {/* Action Buttons */}
           <div className="flex gap-4 mt-8">
-            <Button onClick={handleSave}>
+            <Button onClick={handleSaveClick}>
               Simpan Perubahan
             </Button>
             <Button variant="outline" onClick={handleCancel}>
@@ -207,6 +218,15 @@ const PengaturanEdit = () => {
           </div>
         </CardContent>
       </Card>
+
+      <SavePengaturanPopup
+        open={showSavePopup}
+        onOpenChange={setShowSavePopup}
+        onConfirm={handleConfirmSave}
+        onCancel={handleCancelSave}
+        showSuccess={showSuccess}
+        onSuccessClose={handleSuccessClose}
+      />
     </div>
   );
 };
