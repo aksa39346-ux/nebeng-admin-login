@@ -27,6 +27,7 @@ import DetailRefund from "./pages/DetailRefund";
 import Laporan from "./pages/Laporan";
 import DetailLaporan from "./pages/DetailLaporan";
 import Pengaturan from "./pages/Pengaturan";
+import PengaturanEdit from "./pages/PengaturanEdit";
 import { MitraProvider } from "./contexts/MitraContext";
 import { CustomerProvider } from "./contexts/CustomerContext";
 import { PesananProvider } from "./contexts/PesananContext";
@@ -74,6 +75,7 @@ const App = () => (
                       <Route path="laporan" element={<Laporan />} />
                       <Route path="laporan/:id" element={<DetailLaporan />} />
                       <Route path="pengaturan" element={<Pengaturan />} />
+                      <Route path="pengaturan/edit" element={<PengaturanEdit />} />
                     </Route>
                     
                     {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
