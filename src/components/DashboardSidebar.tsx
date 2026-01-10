@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import LogoutConfirmPopup from "./LogoutConfirmPopup";
 import {
   LayoutDashboard,
   ShieldCheck,
@@ -74,6 +75,7 @@ const DashboardSidebar = () => {
   };
 
   const [expandedMenus, setExpandedMenus] = useState<string[]>(getInitialExpandedMenus);
+  const [showLogoutPopup, setShowLogoutPopup] = useState(false);
 
   const toggleMenu = (title: string) => {
     setExpandedMenus((prev) =>
@@ -93,7 +95,12 @@ const DashboardSidebar = () => {
     return children.some((child) => location.pathname === child.path);
   };
 
-  const handleLogout = () => {
+  const handleLogoutClick = () => {
+    setShowLogoutPopup(true);
+  };
+
+  const handleLogoutConfirm = () => {
+    setShowLogoutPopup(false);
     navigate("/");
   };
 
@@ -175,13 +182,19 @@ const DashboardSidebar = () => {
       {/* Logout Button */}
       <div className="p-4">
         <button
-          onClick={handleLogout}
+          onClick={handleLogoutClick}
           className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary/90 transition-colors"
         >
           <LogOut size={20} />
           <span>Keluar</span>
         </button>
       </div>
+
+      <LogoutConfirmPopup
+        isOpen={showLogoutPopup}
+        onClose={() => setShowLogoutPopup(false)}
+        onConfirm={handleLogoutConfirm}
+      />
     </aside>
   );
 };
