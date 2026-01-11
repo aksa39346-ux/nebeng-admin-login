@@ -23,6 +23,8 @@ const PengaturanEdit = () => {
   const [showSavePopup, setShowSavePopup] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [passwordError, setPasswordError] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [phoneError, setPhoneError] = useState("");
 
   const [profileData, setProfileData] = useState({
     namaLengkap: "Muhammad Abdul Kadir",
@@ -38,25 +40,75 @@ const PengaturanEdit = () => {
     confirmPassword: "",
   });
 
-  const validatePasswords = () => {
+  const validateEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const validatePhone = (phone: string) => {
+    const phoneRegex = /^[0-9]{10,13}$/;
+    return phoneRegex.test(phone);
+  };
+
+  const validateForm = () => {
+    let isValid = true;
+
+    // Validate email
+    if (!profileData.email.trim()) {
+      setEmailError("Email tidak boleh kosong");
+      isValid = false;
+    } else if (!validateEmail(profileData.email)) {
+      setEmailError("Format email tidak valid");
+      isValid = false;
+    } else {
+      setEmailError("");
+    }
+
+    // Validate phone
+    if (!profileData.noTlp.trim()) {
+      setPhoneError("Nomor telepon tidak boleh kosong");
+      isValid = false;
+    } else if (!validatePhone(profileData.noTlp)) {
+      setPhoneError("Nomor telepon harus 10-13 digit angka");
+      isValid = false;
+    } else {
+      setPhoneError("");
+    }
+
+    // Validate passwords
     if (passwordData.newPassword || passwordData.confirmPassword) {
       if (passwordData.newPassword !== passwordData.confirmPassword) {
         setPasswordError("Password baru dan konfirmasi password tidak sama");
-        return false;
-      }
-      if (passwordData.newPassword.length < 6) {
+        isValid = false;
+      } else if (passwordData.newPassword.length < 6) {
         setPasswordError("Password minimal 6 karakter");
-        return false;
+        isValid = false;
+      } else {
+        setPasswordError("");
       }
+    } else {
+      setPasswordError("");
     }
-    setPasswordError("");
-    return true;
+
+    return isValid;
   };
 
   const handleSaveClick = () => {
-    if (validatePasswords()) {
+    if (validateForm()) {
       setShowSavePopup(true);
     }
+  };
+
+  const handleEmailChange = (value: string) => {
+    setProfileData({ ...profileData, email: value });
+    if (emailError) setEmailError("");
+  };
+
+  const handlePhoneChange = (value: string) => {
+    // Only allow numbers
+    const numericValue = value.replace(/[^0-9]/g, "");
+    setProfileData({ ...profileData, noTlp: numericValue });
+    if (phoneError) setPhoneError("");
   };
 
   const handleConfirmSave = () => {
@@ -128,9 +180,10 @@ const PengaturanEdit = () => {
                 <Input
                   type="email"
                   value={profileData.email}
-                  onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
-                  className="bg-muted/50 border-muted"
+                  onChange={(e) => handleEmailChange(e.target.value)}
+                  className={`bg-muted/50 border-muted ${emailError ? "border-destructive" : ""}`}
                 />
+                {emailError && <p className="text-sm text-destructive">{emailError}</p>}
               </div>
               <div className="space-y-2">
                 <Label className="text-sm text-muted-foreground">Tempat Lahir</Label>
@@ -170,9 +223,11 @@ const PengaturanEdit = () => {
                 <Label className="text-sm text-muted-foreground">No. Tlp</Label>
                 <Input
                   value={profileData.noTlp}
-                  onChange={(e) => setProfileData({ ...profileData, noTlp: e.target.value })}
-                  className="bg-muted/50 border-muted"
+                  onChange={(e) => handlePhoneChange(e.target.value)}
+                  className={`bg-muted/50 border-muted ${phoneError ? "border-destructive" : ""}`}
+                  maxLength={13}
                 />
+                {phoneError && <p className="text-sm text-destructive">{phoneError}</p>}
               </div>
             </div>
           </div>
