@@ -22,6 +22,7 @@ const PengaturanEdit = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showSavePopup, setShowSavePopup] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [passwordError, setPasswordError] = useState("");
 
   const [profileData, setProfileData] = useState({
     namaLengkap: "Muhammad Abdul Kadir",
@@ -37,8 +38,25 @@ const PengaturanEdit = () => {
     confirmPassword: "",
   });
 
+  const validatePasswords = () => {
+    if (passwordData.newPassword || passwordData.confirmPassword) {
+      if (passwordData.newPassword !== passwordData.confirmPassword) {
+        setPasswordError("Password baru dan konfirmasi password tidak sama");
+        return false;
+      }
+      if (passwordData.newPassword.length < 6) {
+        setPasswordError("Password minimal 6 karakter");
+        return false;
+      }
+    }
+    setPasswordError("");
+    return true;
+  };
+
   const handleSaveClick = () => {
-    setShowSavePopup(true);
+    if (validatePasswords()) {
+      setShowSavePopup(true);
+    }
   };
 
   const handleConfirmSave = () => {
@@ -57,6 +75,13 @@ const PengaturanEdit = () => {
 
   const handleCancel = () => {
     navigate("/dashboard/pengaturan");
+  };
+
+  const handlePasswordChange = (field: "newPassword" | "confirmPassword", value: string) => {
+    setPasswordData({ ...passwordData, [field]: value });
+    if (passwordError) {
+      setPasswordError("");
+    }
   };
 
   return (
@@ -164,8 +189,8 @@ const PengaturanEdit = () => {
                     type={showNewPassword ? "text" : "password"}
                     placeholder="Masukkan Password Baru"
                     value={passwordData.newPassword}
-                    onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
-                    className="bg-muted/50 border-muted pr-10"
+                    onChange={(e) => handlePasswordChange("newPassword", e.target.value)}
+                    className={`bg-muted/50 border-muted pr-10 ${passwordError ? "border-destructive" : ""}`}
                   />
                   <button
                     type="button"
@@ -188,8 +213,8 @@ const PengaturanEdit = () => {
                     type={showConfirmPassword ? "text" : "password"}
                     placeholder="Masukkan Password Baru"
                     value={passwordData.confirmPassword}
-                    onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
-                    className="bg-muted/50 border-muted pr-10"
+                    onChange={(e) => handlePasswordChange("confirmPassword", e.target.value)}
+                    className={`bg-muted/50 border-muted pr-10 ${passwordError ? "border-destructive" : ""}`}
                   />
                   <button
                     type="button"
@@ -204,6 +229,12 @@ const PengaturanEdit = () => {
                   </button>
                 </div>
               </div>
+              
+              {passwordError && (
+                <div className="md:col-span-2">
+                  <p className="text-sm text-destructive">{passwordError}</p>
+                </div>
+              )}
             </div>
           </div>
 
