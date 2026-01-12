@@ -3,24 +3,62 @@ import {
   DialogContent,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
+import { useState } from "react";
 
 interface BlockLaporanPopupProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onConfirm: () => void;
+  onConfirm: (blockType: "mitra" | "customer") => void;
   type: "confirm" | "success";
+  mitraName?: string;
+  customerName?: string;
 }
 
-const BlockLaporanPopup = ({ open, onOpenChange, onConfirm, type }: BlockLaporanPopupProps) => {
+const BlockLaporanPopup = ({ 
+  open, 
+  onOpenChange, 
+  onConfirm, 
+  type,
+  mitraName = "Mitra",
+  customerName = "Customer"
+}: BlockLaporanPopupProps) => {
+  const [selectedType, setSelectedType] = useState<"mitra" | "customer">("mitra");
+
   if (type === "confirm") {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="sm:max-w-md p-8">
           <div className="flex flex-col items-center text-center">
             <h2 className="text-xl font-semibold text-foreground mb-6">
-              Apakah Anda Yakin Ingin Block Akun Ini
+              Pilih Akun Yang Ingin Di Block
             </h2>
             
+            {/* Selection */}
+            <div className="w-full mb-6">
+              <RadioGroup 
+                value={selectedType} 
+                onValueChange={(value) => setSelectedType(value as "mitra" | "customer")}
+                className="space-y-3"
+              >
+                <div className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-muted/50 cursor-pointer">
+                  <RadioGroupItem value="mitra" id="mitra" />
+                  <Label htmlFor="mitra" className="flex-1 cursor-pointer">
+                    <div className="font-medium">Block Mitra</div>
+                    <div className="text-sm text-muted-foreground">{mitraName}</div>
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-muted/50 cursor-pointer">
+                  <RadioGroupItem value="customer" id="customer" />
+                  <Label htmlFor="customer" className="flex-1 cursor-pointer">
+                    <div className="font-medium">Block Customer</div>
+                    <div className="text-sm text-muted-foreground">{customerName}</div>
+                  </Label>
+                </div>
+              </RadioGroup>
+            </div>
+
             {/* Illustration */}
             <div className="mb-8 relative">
               <div className="w-24 h-20 bg-amber-100 rounded-lg flex items-center justify-center relative">
@@ -55,7 +93,7 @@ const BlockLaporanPopup = ({ open, onOpenChange, onConfirm, type }: BlockLaporan
               <Button 
                 className="flex-1 bg-red-500 hover:bg-red-600 text-white"
                 onClick={() => {
-                  onConfirm();
+                  onConfirm(selectedType);
                   onOpenChange(false);
                 }}
               >

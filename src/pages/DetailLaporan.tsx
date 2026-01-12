@@ -6,6 +6,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useLaporan } from "@/contexts/LaporanContext";
+import { useMitra } from "@/contexts/MitraContext";
+import { useCustomer } from "@/contexts/CustomerContext";
 import BlockLaporanPopup from "@/components/BlockLaporanPopup";
 import SaveLaporanPopup from "@/components/SaveLaporanPopup";
 import { toast } from "sonner";
@@ -14,6 +16,8 @@ const DetailLaporan = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { getLaporanDetail, updateLaporan } = useLaporan();
+  const { blockMitra } = useMitra();
+  const { blockCustomer } = useCustomer();
   const laporan = getLaporanDetail(id || "");
 
   const [showBlockConfirm, setShowBlockConfirm] = useState(false);
@@ -36,7 +40,14 @@ const DetailLaporan = () => {
     toast.success("ID berhasil disalin");
   };
 
-  const handleBlockConfirm = () => {
+  const handleBlockConfirm = (blockType: "mitra" | "customer") => {
+    if (blockType === "mitra") {
+      blockMitra(laporan.mitraId);
+      toast.success(`Mitra ${laporan.namaMitra} berhasil diblokir`);
+    } else {
+      blockCustomer(laporan.customerId);
+      toast.success(`Customer ${laporan.namaCustomer} berhasil diblokir`);
+    }
     setShowBlockConfirm(false);
     setShowBlockSuccess(true);
   };
@@ -100,6 +111,7 @@ const DetailLaporan = () => {
                 <div>
                   <h3 className="font-semibold text-lg">{laporan.namaCustomer}</h3>
                   <p className="text-muted-foreground text-sm">Costumer</p>
+                  <p className="text-xs text-primary">ID: {laporan.customerId}</p>
                 </div>
               </div>
 
@@ -272,6 +284,9 @@ const DetailLaporan = () => {
               Block Akun
             </Button>
           </div>
+          <p className="text-sm text-muted-foreground mt-2">
+            Blokir mitra atau customer yang terlibat dalam laporan ini
+          </p>
         </CardContent>
       </Card>
 
@@ -362,6 +377,8 @@ const DetailLaporan = () => {
         onOpenChange={setShowBlockConfirm}
         onConfirm={handleBlockConfirm}
         type="confirm"
+        mitraName={laporan.namaMitra}
+        customerName={laporan.namaCustomer}
       />
       <BlockLaporanPopup
         open={showBlockSuccess}
