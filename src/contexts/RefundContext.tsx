@@ -47,12 +47,19 @@ const initialRefundList: RefundData[] = [
 interface RefundContextType {
   refundList: RefundData[];
   getRefundDetail: (id: string) => RefundDetail | undefined;
+  updateRefundStatus: (id: string, status: "PROSES" | "SELESAI" | "BATAL") => void;
 }
 
 const RefundContext = createContext<RefundContextType | undefined>(undefined);
 
 export const RefundProvider = ({ children }: { children: ReactNode }) => {
-  const [refundList] = useState<RefundData[]>(initialRefundList);
+  const [refundList, setRefundList] = useState<RefundData[]>(initialRefundList);
+
+  const updateRefundStatus = (id: string, status: "PROSES" | "SELESAI" | "BATAL") => {
+    setRefundList(prev => prev.map(refund => 
+      refund.id === id ? { ...refund, status } : refund
+    ));
+  };
 
   const getRefundDetail = (id: string): RefundDetail | undefined => {
     const refund = refundList.find((r) => r.id === id);
@@ -72,7 +79,7 @@ export const RefundProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <RefundContext.Provider value={{ refundList, getRefundDetail }}>
+    <RefundContext.Provider value={{ refundList, getRefundDetail, updateRefundStatus }}>
       {children}
     </RefundContext.Provider>
   );
