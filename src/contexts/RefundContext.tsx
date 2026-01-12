@@ -30,7 +30,6 @@ export interface RefundDetail {
   tujuan: { lokasi: string; waktu: string; alamat: string };
 }
 
-// Sample data
 const initialRefundList: RefundData[] = [
   { id: "R001", noOrder: "0091", namaCustomer: "Muhammda Abdul", namaDriver: "Maulana Injil", tanggal: new Date(2023, 9, 17), noTransaksi: "INV-123456789", jumlahRefund: 60000, status: "PROSES" },
   { id: "R002", noOrder: "0091", namaCustomer: "Muhammda Abdul", namaDriver: "Maulana Injil", tanggal: new Date(2023, 9, 17), noTransaksi: "INV-123456789", jumlahRefund: 60000, status: "SELESAI" },
@@ -52,7 +51,7 @@ interface RefundContextType {
 
 const RefundContext = createContext<RefundContextType | undefined>(undefined);
 
-export const RefundProvider = ({ children }: { children: ReactNode }) => {
+export function RefundProvider({ children }: { children: ReactNode }) {
   const [refundList, setRefundList] = useState<RefundData[]>(initialRefundList);
 
   const updateRefundStatus = (id: string, status: "PROSES" | "SELESAI" | "BATAL") => {
@@ -67,7 +66,7 @@ export const RefundProvider = ({ children }: { children: ReactNode }) => {
 
     return {
       ...refund,
-      idPesanan: `NEBENG-98299A`,
+      idPesanan: "NEBENG-98299A",
       metodeRefund: "Transfer BRIVA",
       layananNebeng: "Motor",
       biayaPenumpang: { quantity: 2, price: 30000 },
@@ -78,17 +77,19 @@ export const RefundProvider = ({ children }: { children: ReactNode }) => {
     };
   };
 
+  const value = { refundList, getRefundDetail, updateRefundStatus };
+
   return (
-    <RefundContext.Provider value={{ refundList, getRefundDetail, updateRefundStatus }}>
+    <RefundContext.Provider value={value}>
       {children}
     </RefundContext.Provider>
   );
-};
+}
 
-export const useRefund = () => {
+export function useRefund() {
   const context = useContext(RefundContext);
   if (context === undefined) {
     throw new Error("useRefund must be used within a RefundProvider");
   }
   return context;
-};
+}
