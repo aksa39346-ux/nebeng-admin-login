@@ -9,7 +9,7 @@ import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 import DashboardLayout from "./layouts/DashboardLayout";
 import Dashboard from "./pages/Dashboard";
-import Profile from "./pages/Profile";
+
 import VerifikasiMitra from "./pages/VerifikasiMitra";
 import DetailMitra from "./pages/DetailMitra";
 import DaftarMitra from "./pages/DaftarMitra";
@@ -55,7 +55,7 @@ const App = () => (
                     {/* Dashboard Routes */}
                     <Route path="/dashboard" element={<DashboardLayout />}>
                       <Route index element={<Dashboard />} />
-                      <Route path="profile" element={<Profile />} />
+                      
                       <Route path="verifikasi-mitra" element={<VerifikasiMitra />} />
                       <Route path="verifikasi-mitra/:id" element={<DetailMitra />} />
                       <Route path="mitra" element={<DaftarMitra />} />
