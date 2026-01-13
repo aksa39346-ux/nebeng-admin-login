@@ -154,7 +154,7 @@ const DashboardHeader = ({ pageTitle = "Dashboard", showWelcome = false }: Dashb
           <DropdownMenuTrigger asChild>
             <button className="flex items-center gap-2 hover:opacity-80 transition-opacity">
               <Avatar className="h-9 w-9">
-                <AvatarImage src="" />
+                <AvatarImage src={profile.foto} />
                 <AvatarFallback className="bg-primary text-primary-foreground text-sm">
                   {getInitials(profile.namaLengkap)}
                 </AvatarFallback>
