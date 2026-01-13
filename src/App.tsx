@@ -9,7 +9,6 @@ import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 import DashboardLayout from "./layouts/DashboardLayout";
 import Dashboard from "./pages/Dashboard";
-
 import VerifikasiMitra from "./pages/VerifikasiMitra";
 import DetailMitra from "./pages/DetailMitra";
 import DaftarMitra from "./pages/DaftarMitra";
@@ -33,60 +32,62 @@ import { CustomerProvider } from "./contexts/CustomerContext";
 import { PesananProvider } from "./contexts/PesananContext";
 import { RefundProvider } from "./contexts/RefundContext";
 import { LaporanProvider } from "./contexts/LaporanContext";
+import { AdminProvider } from "./contexts/AdminContext";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <MitraProvider>
-        <CustomerProvider>
-          <PesananProvider>
-            <RefundProvider>
-              <LaporanProvider>
-                <Toaster />
-                <Sonner />
-                <BrowserRouter>
-                  <Routes>
-                    <Route path="/" element={<Index />} />
-                    <Route path="/forgot-password" element={<ForgotPassword />} />
-                    <Route path="/reset-password" element={<ResetPassword />} />
-                    
-                    {/* Dashboard Routes */}
-                    <Route path="/dashboard" element={<DashboardLayout />}>
-                      <Route index element={<Dashboard />} />
+      <AdminProvider>
+        <MitraProvider>
+          <CustomerProvider>
+            <PesananProvider>
+              <RefundProvider>
+                <LaporanProvider>
+                  <Toaster />
+                  <Sonner />
+                  <BrowserRouter>
+                    <Routes>
+                      <Route path="/" element={<Index />} />
+                      <Route path="/forgot-password" element={<ForgotPassword />} />
+                      <Route path="/reset-password" element={<ResetPassword />} />
                       
-                      <Route path="verifikasi-mitra" element={<VerifikasiMitra />} />
-                      <Route path="verifikasi-mitra/:id" element={<DetailMitra />} />
-                      <Route path="mitra" element={<DaftarMitra />} />
-                      <Route path="mitra/:id" element={<DetailMitra />} />
-                      <Route path="mitra-kendaraan" element={<KendaraanMitra />} />
-                      <Route path="mitra-kendaraan/:id" element={<DetailKendaraanMitra />} />
-                      <Route path="mitra-blokir" element={<BlokirMitra />} />
-                      <Route path="verifikasi-costumer" element={<VerifikasiCustomer />} />
-                      <Route path="verifikasi-costumer/:id" element={<DetailCustomer />} />
-                      <Route path="costumer" element={<DaftarCustomer />} />
-                      <Route path="costumer/:id" element={<DetailCustomer />} />
-                      <Route path="costumer-blokir" element={<BlokirCustomer />} />
-                      <Route path="pesanan" element={<Pesanan />} />
-                      <Route path="pesanan/:id" element={<DetailPesanan />} />
-                      <Route path="refund" element={<Refund />} />
-                      <Route path="refund/:id" element={<DetailRefund />} />
-                      <Route path="laporan" element={<Laporan />} />
-                      <Route path="laporan/:id" element={<DetailLaporan />} />
-                      <Route path="pengaturan" element={<Pengaturan />} />
-                      <Route path="pengaturan/edit" element={<PengaturanEdit />} />
-                    </Route>
-                    
-                    {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
-                </BrowserRouter>
-              </LaporanProvider>
-            </RefundProvider>
-          </PesananProvider>
-        </CustomerProvider>
-      </MitraProvider>
+                      {/* Dashboard Routes */}
+                      <Route path="/dashboard" element={<DashboardLayout />}>
+                        <Route index element={<Dashboard />} />
+                        <Route path="verifikasi-mitra" element={<VerifikasiMitra />} />
+                        <Route path="verifikasi-mitra/:id" element={<DetailMitra />} />
+                        <Route path="mitra" element={<DaftarMitra />} />
+                        <Route path="mitra/:id" element={<DetailMitra />} />
+                        <Route path="mitra-kendaraan" element={<KendaraanMitra />} />
+                        <Route path="mitra-kendaraan/:id" element={<DetailKendaraanMitra />} />
+                        <Route path="mitra-blokir" element={<BlokirMitra />} />
+                        <Route path="verifikasi-costumer" element={<VerifikasiCustomer />} />
+                        <Route path="verifikasi-costumer/:id" element={<DetailCustomer />} />
+                        <Route path="costumer" element={<DaftarCustomer />} />
+                        <Route path="costumer/:id" element={<DetailCustomer />} />
+                        <Route path="costumer-blokir" element={<BlokirCustomer />} />
+                        <Route path="pesanan" element={<Pesanan />} />
+                        <Route path="pesanan/:id" element={<DetailPesanan />} />
+                        <Route path="refund" element={<Refund />} />
+                        <Route path="refund/:id" element={<DetailRefund />} />
+                        <Route path="laporan" element={<Laporan />} />
+                        <Route path="laporan/:id" element={<DetailLaporan />} />
+                        <Route path="pengaturan" element={<Pengaturan />} />
+                        <Route path="pengaturan/edit" element={<PengaturanEdit />} />
+                      </Route>
+                      
+                      {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                      <Route path="*" element={<NotFound />} />
+                    </Routes>
+                  </BrowserRouter>
+                </LaporanProvider>
+              </RefundProvider>
+            </PesananProvider>
+          </CustomerProvider>
+        </MitraProvider>
+      </AdminProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );

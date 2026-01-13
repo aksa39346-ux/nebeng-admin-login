@@ -13,29 +13,30 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Eye, EyeOff, Pencil, Calendar } from "lucide-react";
+import { useAdmin } from "@/contexts/AdminContext";
 
 const Pengaturan = () => {
   const navigate = useNavigate();
-  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const { profile } = useAdmin();
   const [isEditingPassword, setIsEditingPassword] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
-  const [profileData, setProfileData] = useState({
-    namaLengkap: "Muhammad Abdul Kadir",
-    email: "Abdul000@gmail.com",
-    tempatLahir: "London",
-    tanggalLahir: "01-02-1999",
-    jenisKelamin: "Laki - Laki",
-    noTlp: "089373933994",
-  });
 
   const [passwordData, setPasswordData] = useState({
     currentPassword: "password123",
     newPassword: "",
     confirmPassword: "",
   });
+
+  const getInitials = (name: string) => {
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+  };
 
   return (
     <div className="space-y-6">
@@ -49,13 +50,13 @@ const Pengaturan = () => {
               <Avatar className="h-16 w-16">
                 <AvatarImage src="" />
                 <AvatarFallback className="bg-muted text-muted-foreground text-xl">
-                  MA
+                  {getInitials(profile.namaLengkap)}
                 </AvatarFallback>
               </Avatar>
               <div>
-                <h2 className="text-lg font-semibold text-foreground">Muhammad Abdul</h2>
-                <p className="text-sm text-muted-foreground">Nebeng Motor</p>
-                <p className="text-sm text-muted-foreground">Admin</p>
+                <h2 className="text-lg font-semibold text-foreground">{profile.namaLengkap}</h2>
+                <p className="text-sm text-muted-foreground">{profile.layanan}</p>
+                <p className="text-sm text-muted-foreground">{profile.role}</p>
               </div>
             </div>
             <Button
@@ -76,9 +77,8 @@ const Pengaturan = () => {
               <div className="space-y-2">
                 <Label className="text-sm text-muted-foreground">Nama Lengkap</Label>
                 <Input
-                  value={profileData.namaLengkap}
-                  onChange={(e) => setProfileData({ ...profileData, namaLengkap: e.target.value })}
-                  disabled={!isEditingProfile}
+                  value={profile.namaLengkap}
+                  disabled
                   className="bg-muted/50 border-muted disabled:opacity-100"
                 />
               </div>
@@ -86,18 +86,16 @@ const Pengaturan = () => {
                 <Label className="text-sm text-muted-foreground">Email</Label>
                 <Input
                   type="email"
-                  value={profileData.email}
-                  onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
-                  disabled={!isEditingProfile}
+                  value={profile.email}
+                  disabled
                   className="bg-muted/50 border-muted disabled:opacity-100"
                 />
               </div>
               <div className="space-y-2">
                 <Label className="text-sm text-muted-foreground">Tempat Lahir</Label>
                 <Input
-                  value={profileData.tempatLahir}
-                  onChange={(e) => setProfileData({ ...profileData, tempatLahir: e.target.value })}
-                  disabled={!isEditingProfile}
+                  value={profile.tempatLahir}
+                  disabled
                   className="bg-muted/50 border-muted disabled:opacity-100"
                 />
               </div>
@@ -105,9 +103,8 @@ const Pengaturan = () => {
                 <Label className="text-sm text-muted-foreground">Tanggal Lahir</Label>
                 <div className="relative">
                   <Input
-                    value={profileData.tanggalLahir}
-                    onChange={(e) => setProfileData({ ...profileData, tanggalLahir: e.target.value })}
-                    disabled={!isEditingProfile}
+                    value={profile.tanggalLahir}
+                    disabled
                     className="bg-muted/50 border-muted disabled:opacity-100 pr-10"
                   />
                   <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -116,9 +113,8 @@ const Pengaturan = () => {
               <div className="space-y-2">
                 <Label className="text-sm text-muted-foreground">Jenis Kelamin</Label>
                 <Select
-                  value={profileData.jenisKelamin}
-                  onValueChange={(value) => setProfileData({ ...profileData, jenisKelamin: value })}
-                  disabled={!isEditingProfile}
+                  value={profile.jenisKelamin}
+                  disabled
                 >
                   <SelectTrigger className="bg-muted/50 border-muted disabled:opacity-100">
                     <SelectValue />
@@ -132,9 +128,8 @@ const Pengaturan = () => {
               <div className="space-y-2">
                 <Label className="text-sm text-muted-foreground">No. Tlp</Label>
                 <Input
-                  value={profileData.noTlp}
-                  onChange={(e) => setProfileData({ ...profileData, noTlp: e.target.value })}
-                  disabled={!isEditingProfile}
+                  value={profile.noTlp}
+                  disabled
                   className="bg-muted/50 border-muted disabled:opacity-100"
                 />
               </div>

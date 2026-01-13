@@ -14,9 +14,11 @@ import {
 } from "@/components/ui/select";
 import { Eye, EyeOff, Camera } from "lucide-react";
 import SavePengaturanPopup from "@/components/SavePengaturanPopup";
+import { useAdmin } from "@/contexts/AdminContext";
 
 const PengaturanEdit = () => {
   const navigate = useNavigate();
+  const { profile, updateProfile } = useAdmin();
   
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -27,18 +29,27 @@ const PengaturanEdit = () => {
   const [phoneError, setPhoneError] = useState("");
 
   const [profileData, setProfileData] = useState({
-    namaLengkap: "Muhammad Abdul Kadir",
-    email: "Abdul000@gmail.com",
-    tempatLahir: "London",
-    tanggalLahir: "01-02-1999",
-    jenisKelamin: "Laki - Laki",
-    noTlp: "089373933994",
+    namaLengkap: profile.namaLengkap,
+    email: profile.email,
+    tempatLahir: profile.tempatLahir,
+    tanggalLahir: profile.tanggalLahir,
+    jenisKelamin: profile.jenisKelamin,
+    noTlp: profile.noTlp,
   });
 
   const [passwordData, setPasswordData] = useState({
     newPassword: "",
     confirmPassword: "",
   });
+
+  const getInitials = (name: string) => {
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+  };
 
   const validateEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -112,6 +123,8 @@ const PengaturanEdit = () => {
   };
 
   const handleConfirmSave = () => {
+    // Update the global admin profile
+    updateProfile(profileData);
     setShowSuccess(true);
   };
 
@@ -148,7 +161,7 @@ const PengaturanEdit = () => {
               <Avatar className="h-20 w-20">
                 <AvatarImage src="" />
                 <AvatarFallback className="bg-muted text-muted-foreground text-2xl">
-                  MA
+                  {getInitials(profileData.namaLengkap)}
                 </AvatarFallback>
               </Avatar>
               <button className="absolute bottom-0 right-0 bg-primary text-primary-foreground rounded-full p-1.5 hover:bg-primary/90">
@@ -156,9 +169,9 @@ const PengaturanEdit = () => {
               </button>
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-foreground">Muhammad Abdul</h2>
-              <p className="text-sm text-muted-foreground">Nebeng Motor</p>
-              <p className="text-sm text-muted-foreground">Admin</p>
+              <h2 className="text-lg font-semibold text-foreground">{profileData.namaLengkap}</h2>
+              <p className="text-sm text-muted-foreground">{profile.layanan}</p>
+              <p className="text-sm text-muted-foreground">{profile.role}</p>
             </div>
           </div>
 
