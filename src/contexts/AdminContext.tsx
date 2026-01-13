@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, ReactNode } from "react";
+import { createContext, useContext, useState, ReactNode, useEffect } from "react";
 
 export interface AdminProfile {
   namaLengkap: string;
@@ -9,12 +9,15 @@ export interface AdminProfile {
   noTlp: string;
   role: string;
   layanan: string;
+  foto: string;
 }
 
 interface AdminContextType {
   profile: AdminProfile;
   updateProfile: (data: Partial<AdminProfile>) => void;
 }
+
+const STORAGE_KEY = "admin-profile";
 
 const defaultProfile: AdminProfile = {
   namaLengkap: "Muhammad Abdul Kadir",
@@ -25,12 +28,33 @@ const defaultProfile: AdminProfile = {
   noTlp: "089373933994",
   role: "Admin",
   layanan: "Nebeng Motor",
+  foto: "",
+};
+
+const getStoredProfile = (): AdminProfile => {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) {
+      return { ...defaultProfile, ...JSON.parse(stored) };
+    }
+  } catch (error) {
+    console.error("Error loading profile from localStorage:", error);
+  }
+  return defaultProfile;
 };
 
 const AdminContext = createContext<AdminContextType | undefined>(undefined);
 
 export function AdminProvider({ children }: { children: ReactNode }) {
-  const [profile, setProfile] = useState<AdminProfile>(defaultProfile);
+  const [profile, setProfile] = useState<AdminProfile>(getStoredProfile);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(profile));
+    } catch (error) {
+      console.error("Error saving profile to localStorage:", error);
+    }
+  }, [profile]);
 
   const updateProfile = (data: Partial<AdminProfile>) => {
     setProfile((prev) => ({ ...prev, ...data }));

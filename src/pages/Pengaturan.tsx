@@ -48,7 +48,7 @@ const Pengaturan = () => {
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center gap-4">
               <Avatar className="h-16 w-16">
-                <AvatarImage src="" />
+                <AvatarImage src={profile.foto} />
                 <AvatarFallback className="bg-muted text-muted-foreground text-xl">
                   {getInitials(profile.namaLengkap)}
                 </AvatarFallback>

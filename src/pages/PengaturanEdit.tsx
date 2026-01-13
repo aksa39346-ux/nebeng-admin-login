@@ -27,6 +27,7 @@ const PengaturanEdit = () => {
   const [passwordError, setPasswordError] = useState("");
   const [emailError, setEmailError] = useState("");
   const [phoneError, setPhoneError] = useState("");
+  const [previewPhoto, setPreviewPhoto] = useState(profile.foto);
 
   const [profileData, setProfileData] = useState({
     namaLengkap: profile.namaLengkap,
@@ -36,6 +37,22 @@ const PengaturanEdit = () => {
     jenisKelamin: profile.jenisKelamin,
     noTlp: profile.noTlp,
   });
+
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) {
+        alert("Ukuran foto maksimal 2MB");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+        setPreviewPhoto(base64String);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const [passwordData, setPasswordData] = useState({
     newPassword: "",
@@ -123,8 +140,8 @@ const PengaturanEdit = () => {
   };
 
   const handleConfirmSave = () => {
-    // Update the global admin profile
-    updateProfile(profileData);
+    // Update the global admin profile including photo
+    updateProfile({ ...profileData, foto: previewPhoto });
     setShowSuccess(true);
   };
 
@@ -159,14 +176,20 @@ const PengaturanEdit = () => {
           <div className="flex items-center gap-4 mb-8">
             <div className="relative">
               <Avatar className="h-20 w-20">
-                <AvatarImage src="" />
+                <AvatarImage src={previewPhoto} />
                 <AvatarFallback className="bg-muted text-muted-foreground text-2xl">
                   {getInitials(profileData.namaLengkap)}
                 </AvatarFallback>
               </Avatar>
-              <button className="absolute bottom-0 right-0 bg-primary text-primary-foreground rounded-full p-1.5 hover:bg-primary/90">
+              <label className="absolute bottom-0 right-0 bg-primary text-primary-foreground rounded-full p-1.5 hover:bg-primary/90 cursor-pointer">
                 <Camera className="h-4 w-4" />
-              </button>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handlePhotoUpload}
+                  className="hidden"
+                />
+              </label>
             </div>
             <div>
               <h2 className="text-lg font-semibold text-foreground">{profileData.namaLengkap}</h2>
