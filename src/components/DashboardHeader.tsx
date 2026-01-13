@@ -151,10 +151,10 @@ const DashboardHeader = ({ userName = "Admin", pageTitle = "Dashboard", showWelc
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-44 p-2 bg-background shadow-lg border rounded-lg">
             <DropdownMenuItem 
-              onClick={() => navigate("/dashboard/profile")}
+              onClick={() => navigate("/dashboard/pengaturan")}
               className="flex items-center justify-between py-3 px-4 cursor-pointer"
             >
-              <span>View Profil</span>
+              <span>Pengaturan</span>
               <User size={18} className="text-muted-foreground" />
             </DropdownMenuItem>
             <DropdownMenuItem 
