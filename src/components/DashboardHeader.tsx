@@ -14,9 +14,9 @@ import {
 } from "@/components/ui/popover";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
+import { useAdmin } from "@/contexts/AdminContext";
 
 interface DashboardHeaderProps {
-  userName?: string;
   pageTitle?: string;
   showWelcome?: boolean;
 }
@@ -65,15 +65,28 @@ const notifications = [
   },
 ];
 
-const DashboardHeader = ({ userName = "Admin", pageTitle = "Dashboard", showWelcome = false }: DashboardHeaderProps) => {
+const DashboardHeader = ({ pageTitle = "Dashboard", showWelcome = false }: DashboardHeaderProps) => {
   const navigate = useNavigate();
   const [notifOpen, setNotifOpen] = useState(false);
+  const { profile } = useAdmin();
+
+  const getInitials = (name: string) => {
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
+  // Get display name (first two words)
+  const displayName = profile.namaLengkap.split(" ").slice(0, 2).join(" ");
 
   return (
     <header className="h-16 bg-background border-b flex items-center justify-between px-6">
       {/* Page Title */}
       <h1 className="text-xl font-semibold text-foreground">
-        {showWelcome ? `Selamat Datang, ${userName} 👋` : pageTitle}
+        {showWelcome ? `Selamat Datang, ${displayName} 👋` : pageTitle}
       </h1>
 
       {/* Right Section */}
@@ -143,10 +156,10 @@ const DashboardHeader = ({ userName = "Admin", pageTitle = "Dashboard", showWelc
               <Avatar className="h-9 w-9">
                 <AvatarImage src="" />
                 <AvatarFallback className="bg-primary text-primary-foreground text-sm">
-                  {userName.charAt(0).toUpperCase()}
+                  {getInitials(profile.namaLengkap)}
                 </AvatarFallback>
               </Avatar>
-              <span className="text-sm font-medium text-foreground">{userName}</span>
+              <span className="text-sm font-medium text-foreground">{displayName}</span>
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-44 p-2 bg-background shadow-lg border rounded-lg">

@@ -25,7 +25,6 @@ const DashboardLayout = () => {
       <DashboardSidebar />
       <div className="flex-1 flex flex-col">
         <DashboardHeader 
-          userName="Kaori000" 
           pageTitle={pageTitle}
           showWelcome={isWelcomePage}
         />
