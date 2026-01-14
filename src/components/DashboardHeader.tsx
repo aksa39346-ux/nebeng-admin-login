@@ -35,6 +35,14 @@ const DashboardHeader = ({ pageTitle = "Dashboard", showWelcome = false }: Dashb
     ? notifications 
     : notifications.filter((n) => n.type === notifFilter);
 
+  // Count notifications per category
+  const notifCounts = {
+    all: notifications.length,
+    laporan: notifications.filter((n) => n.type === "laporan").length,
+    mitra: notifications.filter((n) => n.type === "mitra").length,
+    customer: notifications.filter((n) => n.type === "customer").length,
+  };
+
   const getInitials = (name: string) => {
     return name
       .split(" ")
@@ -96,19 +104,33 @@ const DashboardHeader = ({ pageTitle = "Dashboard", showWelcome = false }: Dashb
                 { key: "laporan", label: "Laporan" },
                 { key: "mitra", label: "Mitra" },
                 { key: "customer", label: "Customer" },
-              ].map((filter) => (
-                <button
-                  key={filter.key}
-                  onClick={() => setNotifFilter(filter.key as NotifFilter)}
-                  className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
-                    notifFilter === filter.key
-                      ? "bg-primary text-primary-foreground"
-                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                  }`}
-                >
-                  {filter.label}
-                </button>
-              ))}
+              ].map((filter) => {
+                const count = notifCounts[filter.key as NotifFilter];
+                return (
+                  <button
+                    key={filter.key}
+                    onClick={() => setNotifFilter(filter.key as NotifFilter)}
+                    className={`px-2.5 py-1.5 text-xs font-medium rounded-md transition-colors flex items-center gap-1.5 ${
+                      notifFilter === filter.key
+                        ? "bg-primary text-primary-foreground"
+                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    }`}
+                  >
+                    {filter.label}
+                    {count > 0 && (
+                      <span
+                        className={`min-w-[18px] h-[18px] rounded-full flex items-center justify-center text-[10px] font-semibold ${
+                          notifFilter === filter.key
+                            ? "bg-primary-foreground/20 text-primary-foreground"
+                            : "bg-muted-foreground/20 text-muted-foreground"
+                        }`}
+                      >
+                        {count}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
             </div>
 
             {/* Notification List */}
