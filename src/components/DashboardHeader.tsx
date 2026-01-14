@@ -22,11 +22,18 @@ interface DashboardHeaderProps {
   showWelcome?: boolean;
 }
 
+type NotifFilter = "all" | "laporan" | "mitra" | "customer";
+
 const DashboardHeader = ({ pageTitle = "Dashboard", showWelcome = false }: DashboardHeaderProps) => {
   const navigate = useNavigate();
   const [notifOpen, setNotifOpen] = useState(false);
+  const [notifFilter, setNotifFilter] = useState<NotifFilter>("all");
   const { profile } = useAdmin();
   const { notifications, unreadCount } = useNotifications();
+
+  const filteredNotifications = notifFilter === "all" 
+    ? notifications 
+    : notifications.filter((n) => n.type === notifFilter);
 
   const getInitials = (name: string) => {
     return name
@@ -82,14 +89,36 @@ const DashboardHeader = ({ pageTitle = "Dashboard", showWelcome = false }: Dashb
               </button>
             </div>
 
+            {/* Filter Tabs */}
+            <div className="flex gap-1 p-2 border-b bg-muted/30">
+              {[
+                { key: "all", label: "Semua" },
+                { key: "laporan", label: "Laporan" },
+                { key: "mitra", label: "Mitra" },
+                { key: "customer", label: "Customer" },
+              ].map((filter) => (
+                <button
+                  key={filter.key}
+                  onClick={() => setNotifFilter(filter.key as NotifFilter)}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                    notifFilter === filter.key
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                  }`}
+                >
+                  {filter.label}
+                </button>
+              ))}
+            </div>
+
             {/* Notification List */}
-            <div className="max-h-80 overflow-y-auto">
-              {notifications.length === 0 ? (
+            <div className="max-h-72 overflow-y-auto">
+              {filteredNotifications.length === 0 ? (
                 <div className="p-4 text-center text-muted-foreground">
                   Tidak ada notifikasi
                 </div>
               ) : (
-                notifications.map((notif) => (
+                filteredNotifications.map((notif) => (
                   <div
                     key={notif.id}
                     onClick={() => {
