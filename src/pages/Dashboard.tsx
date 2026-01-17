@@ -1,4 +1,5 @@
-import { Briefcase, Users, ShieldCheck, UserCheck, Eye, ChevronDown } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Briefcase, Users, ShieldCheck, UserCheck, Eye, ChevronDown, Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -12,44 +13,11 @@ import {
   Cell,
   LabelList,
 } from "recharts";
+import { useDashboardStats } from "@/hooks/useDashboardStats";
+import { useUsers } from "@/hooks/useUsers";
+import { usePendingVerifikasi } from "@/hooks/useVerifikasi";
 
-// Stats data
-const statsData = [
-  {
-    title: "Total Mitra",
-    value: "10.213",
-    icon: Briefcase,
-    bgColor: "bg-[#1e3a5f]",
-    iconBg: "bg-white/20",
-  },
-  {
-    title: "Total Pelanggan",
-    value: "9.563",
-    icon: Users,
-    bgColor: "bg-[#1e3a5f]",
-    iconBg: "bg-white/20",
-  },
-  {
-    title: "Verifikasi Mitra",
-    value: "10.213",
-    icon: ShieldCheck,
-    bgColor: "bg-white border",
-    iconBg: "bg-primary/10",
-    textColor: "text-foreground",
-    iconColor: "text-primary",
-  },
-  {
-    title: "Verifikasi Pelanggan",
-    value: "9.563",
-    icon: UserCheck,
-    bgColor: "bg-white border",
-    iconBg: "bg-orange-100",
-    textColor: "text-foreground",
-    iconColor: "text-orange-500",
-  },
-];
-
-// Chart data
+// Chart data (static for now, can be made dynamic later)
 const chartData = [
   { name: "Nebeng Mobil", value: 120, color: "#1e3a5f" },
   { name: "Nebeng Motor", value: 80, color: "#1e3a5f" },
@@ -57,7 +25,7 @@ const chartData = [
   { name: "Titip Barang", value: 450, color: "#6366f1" },
 ];
 
-// Tujuan terbanyak data
+// Tujuan terbanyak data (static for now)
 const tujuanData = [
   { no: 1, kotaAsal: "Lampung", kotaTujuan: "Pontianak", total: "19.509" },
   { no: 2, kotaAsal: "Bandung", kotaTujuan: "Surabaya", total: "19.103" },
@@ -68,48 +36,73 @@ const tujuanData = [
   { no: 7, kotaAsal: "Manado", kotaTujuan: "Bengkulu", total: "5.229" },
 ];
 
-// Data Mitra
-const mitraData = [
-  {
-    id: "100092",
-    nama: "Muhammda Abdul",
-    email: "dul22345@gmail.com",
-    noTlp: "089563245757",
-    layanan: "Motor",
-    status: "TERVERIFIKASI",
-  },
-  {
-    id: "100092",
-    nama: "Muhammda Abdul",
-    email: "dul22345@gmail.com",
-    noTlp: "089563245757",
-    layanan: "Mobil",
-    status: "DITOLAK",
-  },
-  {
-    id: "100092",
-    nama: "Muhammda Abdul",
-    email: "dul22345@gmail.com",
-    noTlp: "089563245757",
-    layanan: "Titip Barang",
-    status: "PENGAJUAN",
-  },
-];
-
 const getStatusColor = (status: string) => {
   switch (status) {
-    case "TERVERIFIKASI":
+    case "aktif":
       return "bg-green-500 hover:bg-green-600";
-    case "DITOLAK":
-      return "bg-red-500 hover:bg-red-600";
-    case "PENGAJUAN":
+    case "tidak aktif":
       return "bg-orange-500 hover:bg-orange-600";
+    case "blokir":
+      return "bg-red-500 hover:bg-red-600";
+    case "proses":
+      return "bg-yellow-500 hover:bg-yellow-600";
     default:
       return "bg-gray-500";
   }
 };
 
 const Dashboard = () => {
+  const navigate = useNavigate();
+  const { data: stats, isLoading: statsLoading } = useDashboardStats();
+  const { data: mitras, isLoading: mitrasLoading } = useUsers("mitra");
+  const { data: pendingMitra } = usePendingVerifikasi("mitra");
+  const { data: pendingCustomer } = usePendingVerifikasi("customer");
+
+  const recentMitras = (mitras || []).slice(0, 3);
+
+  const statsData = [
+    {
+      title: "Total Mitra",
+      value: stats?.totalMitras?.toLocaleString() || "0",
+      icon: Briefcase,
+      bgColor: "bg-[#1e3a5f]",
+      iconBg: "bg-white/20",
+    },
+    {
+      title: "Total Pelanggan",
+      value: stats?.totalCustomers?.toLocaleString() || "0",
+      icon: Users,
+      bgColor: "bg-[#1e3a5f]",
+      iconBg: "bg-white/20",
+    },
+    {
+      title: "Verifikasi Mitra",
+      value: pendingMitra?.length?.toString() || "0",
+      icon: ShieldCheck,
+      bgColor: "bg-white border",
+      iconBg: "bg-primary/10",
+      textColor: "text-foreground",
+      iconColor: "text-primary",
+    },
+    {
+      title: "Verifikasi Pelanggan",
+      value: pendingCustomer?.length?.toString() || "0",
+      icon: UserCheck,
+      bgColor: "bg-white border",
+      iconBg: "bg-orange-100",
+      textColor: "text-foreground",
+      iconColor: "text-orange-500",
+    },
+  ];
+
+  if (statsLoading || mitrasLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Stats Cards */}
@@ -155,7 +148,7 @@ const Dashboard = () => {
             <CardTitle className="text-lg font-semibold">
               Pesanan{" "}
               <span className="text-sm font-normal text-muted-foreground">
-                (5000 Pesanan)
+                ({stats?.totalBookings || 0} Pesanan)
               </span>
             </CardTitle>
             <Button variant="ghost" size="sm" className="text-muted-foreground">
@@ -242,7 +235,12 @@ const Dashboard = () => {
             <Button variant="ghost" size="sm" className="text-muted-foreground">
               Jun 2025 <ChevronDown size={16} className="ml-1" />
             </Button>
-            <Button variant="link" size="sm" className="text-primary">
+            <Button 
+              variant="link" 
+              size="sm" 
+              className="text-primary"
+              onClick={() => navigate("/dashboard/mitra")}
+            >
               Lihat Lebih
             </Button>
           </div>
@@ -256,31 +254,42 @@ const Dashboard = () => {
                   <th className="text-left py-3 font-medium">NAMA</th>
                   <th className="text-left py-3 font-medium">EMAIL</th>
                   <th className="text-left py-3 font-medium">NO. TLP</th>
-                  <th className="text-left py-3 font-medium">LAYANAN</th>
                   <th className="text-left py-3 font-medium">STATUS</th>
                   <th className="text-center py-3 font-medium">AKSI</th>
                 </tr>
               </thead>
               <tbody>
-                {mitraData.map((mitra, index) => (
-                  <tr key={index} className="border-b border-border/50">
-                    <td className="py-4">{mitra.id}</td>
-                    <td className="py-4">{mitra.nama}</td>
-                    <td className="py-4">{mitra.email}</td>
-                    <td className="py-4">{mitra.noTlp}</td>
-                    <td className="py-4">{mitra.layanan}</td>
-                    <td className="py-4">
-                      <Badge className={`${getStatusColor(mitra.status)} text-white text-xs`}>
-                        {mitra.status}
-                      </Badge>
-                    </td>
-                    <td className="py-4 text-center">
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
-                        <Eye size={18} className="text-primary" />
-                      </Button>
+                {recentMitras.length > 0 ? (
+                  recentMitras.map((mitra) => (
+                    <tr key={mitra.id} className="border-b border-border/50">
+                      <td className="py-4">{mitra.id.slice(0, 8)}</td>
+                      <td className="py-4">{mitra.nama}</td>
+                      <td className="py-4">{mitra.email}</td>
+                      <td className="py-4">{mitra.no_hp || "-"}</td>
+                      <td className="py-4">
+                        <Badge className={`${getStatusColor(mitra.status)} text-white text-xs`}>
+                          {mitra.status.toUpperCase()}
+                        </Badge>
+                      </td>
+                      <td className="py-4 text-center">
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-8 w-8"
+                          onClick={() => navigate(`/dashboard/mitra/${mitra.id}`)}
+                        >
+                          <Eye size={18} className="text-primary" />
+                        </Button>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={6} className="py-8 text-center text-muted-foreground">
+                      Tidak ada data mitra
                     </td>
                   </tr>
-                ))}
+                )}
               </tbody>
             </table>
           </div>

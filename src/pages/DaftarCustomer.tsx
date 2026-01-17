@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, Calendar as CalendarIcon, Download, Eye, Lock, LockOpen } from "lucide-react";
+import { Search, Calendar as CalendarIcon, Download, Eye, Lock, LockOpen, Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,7 @@ import { format } from "date-fns";
 import { id as localeId } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import * as XLSX from "xlsx";
-import { useCustomer } from "@/contexts/CustomerContext";
+import { useUsers, useUpdateUserStatus } from "@/hooks/useUsers";
 import BlockCustomerPopup from "@/components/BlockCustomerPopup";
 import UnblockCustomerPopup from "@/components/UnblockCustomerPopup";
 import {
@@ -24,22 +24,24 @@ import {
 
 const getStatusBadge = (status: string) => {
   switch (status) {
-    case "TERVERIFIKASI":
-      return <Badge className="bg-green-500 hover:bg-green-600 text-white text-xs">TERVERIFIKASI</Badge>;
-    case "DITOLAK":
-      return <Badge className="bg-red-500 hover:bg-red-600 text-white text-xs">DITOLAK</Badge>;
-    case "PENGAJUAN":
-      return <Badge className="bg-orange-500 hover:bg-orange-600 text-white text-xs">PENGAJUAN</Badge>;
-    case "DIBLOCK":
+    case "aktif":
+      return <Badge className="bg-green-500 hover:bg-green-600 text-white text-xs">AKTIF</Badge>;
+    case "tidak aktif":
+      return <Badge className="bg-orange-500 hover:bg-orange-600 text-white text-xs">TIDAK AKTIF</Badge>;
+    case "blokir":
       return <Badge className="bg-gray-500 hover:bg-gray-600 text-white text-xs">DIBLOCK</Badge>;
+    case "proses":
+      return <Badge className="bg-yellow-500 hover:bg-yellow-600 text-white text-xs">PROSES</Badge>;
     default:
-      return <Badge className="bg-gray-500 text-white text-xs">{status}</Badge>;
+      return <Badge className="bg-gray-500 text-white text-xs">{status.toUpperCase()}</Badge>;
   }
 };
 
 const DaftarCustomer = () => {
   const navigate = useNavigate();
-  const { customerList, blockCustomer, unblockCustomer } = useCustomer();
+  const { data: users, isLoading } = useUsers("customer");
+  const updateStatus = useUpdateUserStatus();
+  
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [entriesPerPage, setEntriesPerPage] = useState("10");
@@ -53,6 +55,8 @@ const DaftarCustomer = () => {
   const [showUnblockSuccess, setShowUnblockSuccess] = useState(false);
   const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
 
+  const customerList = users || [];
+
   // Filter data based on search, date, and status filter
   const filteredData = useMemo(() => {
     return customerList.filter((customer) => {
@@ -60,17 +64,20 @@ const DaftarCustomer = () => {
         customer.nama.toLowerCase().includes(searchQuery.toLowerCase()) ||
         customer.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
         customer.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        customer.noTlp.includes(searchQuery) ||
-        customer.status.toLowerCase().includes(searchQuery.toLowerCase());
+        (customer.no_hp || "").includes(searchQuery);
 
+      const customerDate = new Date(customer.created_at);
       const matchesDate = !selectedDate || 
-        (customer.tanggal.getFullYear() === selectedDate.getFullYear() &&
-         customer.tanggal.getMonth() === selectedDate.getMonth() &&
-         customer.tanggal.getDate() === selectedDate.getDate());
+        (customerDate.getFullYear() === selectedDate.getFullYear() &&
+         customerDate.getMonth() === selectedDate.getMonth() &&
+         customerDate.getDate() === selectedDate.getDate());
 
       const matchesStatus = 
         statusFilter === "SEMUA" ||
-        customer.status === statusFilter;
+        (statusFilter === "aktif" && customer.status === "aktif") ||
+        (statusFilter === "blokir" && customer.status === "blokir") ||
+        (statusFilter === "tidak aktif" && customer.status === "tidak aktif") ||
+        (statusFilter === "proses" && customer.status === "proses");
 
       return matchesSearch && matchesDate && matchesStatus;
     });
@@ -104,12 +111,12 @@ const DaftarCustomer = () => {
     }
 
     const excelData = dataToExport.map(customer => ({
-      "NO. ID": customer.id,
+      "NO. ID": customer.id.slice(0, 8),
       "NAMA": customer.nama,
       "EMAIL": customer.email,
-      "NO. TLP": customer.noTlp,
-      "STATUS": customer.status,
-      "TANGGAL": format(customer.tanggal, "dd-MM-yyyy")
+      "NO. TLP": customer.no_hp || "-",
+      "STATUS": customer.status.toUpperCase(),
+      "TANGGAL": format(new Date(customer.created_at), "dd-MM-yyyy")
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(excelData);
@@ -147,7 +154,7 @@ const DaftarCustomer = () => {
 
   const handleConfirmBlock = () => {
     if (selectedCustomerId) {
-      blockCustomer(selectedCustomerId);
+      updateStatus.mutate({ id: selectedCustomerId, status: "blokir" });
       setShowBlockConfirm(false);
       setShowBlockSuccess(true);
     }
@@ -155,7 +162,7 @@ const DaftarCustomer = () => {
 
   const handleConfirmUnblock = () => {
     if (selectedCustomerId) {
-      unblockCustomer(selectedCustomerId);
+      updateStatus.mutate({ id: selectedCustomerId, status: "aktif" });
       setShowUnblockConfirm(false);
       setShowUnblockSuccess(true);
     }
@@ -177,6 +184,14 @@ const DaftarCustomer = () => {
     }
     return pages;
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -204,10 +219,10 @@ const DaftarCustomer = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="SEMUA">Semua</SelectItem>
-                  <SelectItem value="PENGAJUAN">Pengajuan</SelectItem>
-                  <SelectItem value="TERVERIFIKASI">Terverifikasi</SelectItem>
-                  <SelectItem value="DITOLAK">Ditolak</SelectItem>
-                  <SelectItem value="DIBLOCK">Diblock</SelectItem>
+                  <SelectItem value="aktif">Aktif</SelectItem>
+                  <SelectItem value="tidak aktif">Tidak Aktif</SelectItem>
+                  <SelectItem value="blokir">Diblock</SelectItem>
+                  <SelectItem value="proses">Proses</SelectItem>
                 </SelectContent>
               </Select>
 
@@ -262,12 +277,12 @@ const DaftarCustomer = () => {
               </thead>
               <tbody>
                 {paginatedData.length > 0 ? (
-                  paginatedData.map((customer, index) => (
-                    <tr key={index} className="border-b border-border/50 hover:bg-muted/30">
-                      <td className="py-4 px-4">{customer.id}</td>
+                  paginatedData.map((customer) => (
+                    <tr key={customer.id} className="border-b border-border/50 hover:bg-muted/30">
+                      <td className="py-4 px-4">{customer.id.slice(0, 8)}</td>
                       <td className="py-4 px-4">{customer.nama}</td>
                       <td className="py-4 px-4 text-primary">{customer.email}</td>
-                      <td className="py-4 px-4">{customer.noTlp}</td>
+                      <td className="py-4 px-4">{customer.no_hp || "-"}</td>
                       <td className="py-4 px-4">
                         {getStatusBadge(customer.status)}
                       </td>
@@ -281,7 +296,7 @@ const DaftarCustomer = () => {
                           >
                             <Eye size={18} className="text-white" />
                           </Button>
-                          {customer.status === "DIBLOCK" ? (
+                          {customer.status === "blokir" ? (
                             <Button 
                               variant="ghost" 
                               size="icon" 

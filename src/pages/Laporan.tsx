@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, Calendar as CalendarIcon, Download, Eye } from "lucide-react";
+import { Search, Calendar as CalendarIcon, Download, Eye, Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -17,29 +17,34 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useLaporan } from "@/contexts/LaporanContext";
+import { useLaporanList } from "@/hooks/useLaporan";
 
 const Laporan = () => {
   const navigate = useNavigate();
-  const { laporanList } = useLaporan();
+  const { data: laporanData, isLoading } = useLaporanList();
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [entriesPerPage, setEntriesPerPage] = useState("10");
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
 
+  const laporanList = laporanData || [];
+
   // Filter data based on search and date
   const filteredData = useMemo(() => {
     return laporanList.filter((laporan) => {
+      const pelaporName = laporan.pelapor?.nama || "";
+      
       const matchesSearch = searchQuery === "" || 
-        laporan.namaCustomer.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        laporan.noOrder.includes(searchQuery) ||
-        laporan.layanan.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        laporan.laporan.toLowerCase().includes(searchQuery.toLowerCase());
+        pelaporName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        laporan.id.includes(searchQuery) ||
+        laporan.jenis_laporan.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        laporan.deskripsi.toLowerCase().includes(searchQuery.toLowerCase());
 
+      const laporanDate = new Date(laporan.created_at);
       const matchesDate = !selectedDate || 
-        (laporan.tanggal.getFullYear() === selectedDate.getFullYear() &&
-         laporan.tanggal.getMonth() === selectedDate.getMonth() &&
-         laporan.tanggal.getDate() === selectedDate.getDate());
+        (laporanDate.getFullYear() === selectedDate.getFullYear() &&
+         laporanDate.getMonth() === selectedDate.getMonth() &&
+         laporanDate.getDate() === selectedDate.getDate());
 
       return matchesSearch && matchesDate;
     });
@@ -73,11 +78,11 @@ const Laporan = () => {
     }
 
     const excelData = dataToExport.map(laporan => ({
-      "NO. ORDER": laporan.noOrder,
-      "NAMA COSTUMER": laporan.namaCustomer,
-      "TANGGAL": format(laporan.tanggal, "EEEE, dd MMM yyyy", { locale: localeId }),
-      "LAYANAN": laporan.layanan,
-      "LAPORAN": laporan.laporan,
+      "NO. ORDER": laporan.booking_id?.slice(0, 8) || "-",
+      "NAMA PELAPOR": laporan.pelapor?.nama || "-",
+      "TANGGAL": format(new Date(laporan.created_at), "EEEE, dd MMM yyyy", { locale: localeId }),
+      "JENIS LAPORAN": laporan.jenis_laporan,
+      "DESKRIPSI": laporan.deskripsi,
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(excelData);
@@ -114,11 +119,19 @@ const Laporan = () => {
     return pages;
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <Card className="shadow-sm">
         <CardHeader className="pb-4">
-          <CardTitle className="text-xl font-semibold">Daftar Pesanan</CardTitle>
+          <CardTitle className="text-xl font-semibold">Daftar Laporan</CardTitle>
         </CardHeader>
         <CardContent>
           {/* Filters */}
@@ -175,24 +188,24 @@ const Laporan = () => {
               <thead>
                 <tr className="bg-[#1e3a5f] text-white">
                   <th className="text-left py-3 px-4 font-medium rounded-tl-lg">NO. ORDER</th>
-                  <th className="text-left py-3 px-4 font-medium">NAMA COSTUMER</th>
+                  <th className="text-left py-3 px-4 font-medium">NAMA PELAPOR</th>
                   <th className="text-left py-3 px-4 font-medium">TANGGAL</th>
-                  <th className="text-left py-3 px-4 font-medium">LAYANAN</th>
-                  <th className="text-left py-3 px-4 font-medium">LAPORAN</th>
+                  <th className="text-left py-3 px-4 font-medium">JENIS LAPORAN</th>
+                  <th className="text-left py-3 px-4 font-medium">DESKRIPSI</th>
                   <th className="text-center py-3 px-4 font-medium rounded-tr-lg">AKSI</th>
                 </tr>
               </thead>
               <tbody>
                 {paginatedData.length > 0 ? (
-                  paginatedData.map((laporan, index) => (
-                    <tr key={index} className="border-b border-border/50 hover:bg-muted/30">
-                      <td className="py-4 px-4">{laporan.noOrder}</td>
-                      <td className="py-4 px-4">{laporan.namaCustomer}</td>
+                  paginatedData.map((laporan) => (
+                    <tr key={laporan.id} className="border-b border-border/50 hover:bg-muted/30">
+                      <td className="py-4 px-4">{laporan.booking_id?.slice(0, 8) || "-"}</td>
+                      <td className="py-4 px-4">{laporan.pelapor?.nama || "-"}</td>
                       <td className="py-4 px-4">
-                        {format(laporan.tanggal, "EEEE, dd MMM yyyy", { locale: localeId })}
+                        {format(new Date(laporan.created_at), "EEEE, dd MMM yyyy", { locale: localeId })}
                       </td>
-                      <td className="py-4 px-4">{laporan.layanan}</td>
-                      <td className="py-4 px-4 max-w-xs truncate">{laporan.laporan}</td>
+                      <td className="py-4 px-4">{laporan.jenis_laporan}</td>
+                      <td className="py-4 px-4 max-w-xs truncate">{laporan.deskripsi}</td>
                       <td className="py-4 px-4">
                         <div className="flex items-center justify-center">
                           <Button 

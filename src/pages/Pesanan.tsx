@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, Calendar as CalendarIcon, Download, Eye } from "lucide-react";
+import { Search, Calendar as CalendarIcon, Download, Eye, Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -18,18 +18,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { usePesanan } from "@/contexts/PesananContext";
+import { useBookings } from "@/hooks/useBookings";
 
 const getStatusBadge = (status: string) => {
   switch (status) {
-    case "SELESAI":
+    case "completed":
       return <Badge className="bg-green-500 hover:bg-green-600 text-white text-xs">SELESAI</Badge>;
-    case "BATAL":
+    case "cancelled":
       return <Badge className="bg-red-500 hover:bg-red-600 text-white text-xs">BATAL</Badge>;
-    case "PROSES":
+    case "pending":
+      return <Badge className="bg-yellow-500 hover:bg-yellow-600 text-white text-xs">PENDING</Badge>;
+    case "confirmed":
       return <Badge className="bg-orange-500 hover:bg-orange-600 text-white text-xs">PROSES</Badge>;
     default:
-      return <Badge className="bg-gray-500 text-white text-xs">{status}</Badge>;
+      return <Badge className="bg-gray-500 text-white text-xs">{status.toUpperCase()}</Badge>;
   }
 };
 
@@ -43,30 +45,38 @@ const formatCurrency = (amount: number) => {
 
 const Pesanan = () => {
   const navigate = useNavigate();
-  const { pesananList } = usePesanan();
+  const { data: bookings, isLoading } = useBookings();
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [entriesPerPage, setEntriesPerPage] = useState("10");
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [statusFilter, setStatusFilter] = useState<string>("SEMUA");
 
+  const pesananList = bookings || [];
+
   // Filter data based on search, date, and status filter
   const filteredData = useMemo(() => {
     return pesananList.filter((pesanan) => {
+      const customerName = pesanan.customer?.nama || "";
+      const mitraName = pesanan.mitra?.nama || "";
+      
       const matchesSearch = searchQuery === "" || 
-        pesanan.namaCustomer.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        pesanan.namaDriver.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        pesanan.noOrder.includes(searchQuery) ||
-        pesanan.layanan.toLowerCase().includes(searchQuery.toLowerCase());
+        customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        mitraName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        pesanan.id.includes(searchQuery);
 
+      const pesananDate = new Date(pesanan.tanggal_booking);
       const matchesDate = !selectedDate || 
-        (pesanan.tanggal.getFullYear() === selectedDate.getFullYear() &&
-         pesanan.tanggal.getMonth() === selectedDate.getMonth() &&
-         pesanan.tanggal.getDate() === selectedDate.getDate());
+        (pesananDate.getFullYear() === selectedDate.getFullYear() &&
+         pesananDate.getMonth() === selectedDate.getMonth() &&
+         pesananDate.getDate() === selectedDate.getDate());
 
       const matchesStatus = 
         statusFilter === "SEMUA" ||
-        pesanan.status === statusFilter;
+        (statusFilter === "PROSES" && pesanan.status === "confirmed") ||
+        (statusFilter === "SELESAI" && pesanan.status === "completed") ||
+        (statusFilter === "BATAL" && pesanan.status === "cancelled") ||
+        (statusFilter === "PENDING" && pesanan.status === "pending");
 
       return matchesSearch && matchesDate && matchesStatus;
     });
@@ -105,13 +115,12 @@ const Pesanan = () => {
     }
 
     const excelData = dataToExport.map(pesanan => ({
-      "NO. ORDER": pesanan.noOrder,
-      "NAMA COSTUMER": pesanan.namaCustomer,
-      "NAMA DRIVER": pesanan.namaDriver,
-      "TANGGAL": format(pesanan.tanggal, "EEEE, dd MMM yyyy", { locale: localeId }),
-      "LAYANAN": pesanan.layanan,
-      "HARGA": formatCurrency(pesanan.harga),
-      "STATUS": pesanan.status,
+      "NO. ORDER": pesanan.id.slice(0, 8),
+      "NAMA COSTUMER": pesanan.customer?.nama || "-",
+      "NAMA DRIVER": pesanan.mitra?.nama || "-",
+      "TANGGAL": format(new Date(pesanan.tanggal_booking), "EEEE, dd MMM yyyy", { locale: localeId }),
+      "HARGA": formatCurrency(pesanan.total_harga),
+      "STATUS": pesanan.status.toUpperCase(),
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(excelData);
@@ -121,7 +130,6 @@ const Pesanan = () => {
       { wch: 20 },
       { wch: 20 },
       { wch: 20 },
-      { wch: 15 },
       { wch: 15 },
       { wch: 12 },
     ];
@@ -150,6 +158,14 @@ const Pesanan = () => {
     return pages;
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <Card className="shadow-sm">
@@ -176,6 +192,7 @@ const Pesanan = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="SEMUA">Semua</SelectItem>
+                  <SelectItem value="PENDING">Pending</SelectItem>
                   <SelectItem value="PROSES">Proses</SelectItem>
                   <SelectItem value="SELESAI">Selesai</SelectItem>
                   <SelectItem value="BATAL">Batal</SelectItem>
@@ -227,7 +244,6 @@ const Pesanan = () => {
                   <th className="text-left py-3 px-4 font-medium">NAMA COSTUMER</th>
                   <th className="text-left py-3 px-4 font-medium">NAMA DRIVER</th>
                   <th className="text-left py-3 px-4 font-medium">TANGGAL</th>
-                  <th className="text-left py-3 px-4 font-medium">LAYANAN</th>
                   <th className="text-left py-3 px-4 font-medium">HARGA</th>
                   <th className="text-center py-3 px-4 font-medium">STATUS</th>
                   <th className="text-center py-3 px-4 font-medium rounded-tr-lg">AKSI</th>
@@ -235,16 +251,15 @@ const Pesanan = () => {
               </thead>
               <tbody>
                 {paginatedData.length > 0 ? (
-                  paginatedData.map((pesanan, index) => (
-                    <tr key={index} className="border-b border-border/50 hover:bg-muted/30">
-                      <td className="py-4 px-4">{pesanan.noOrder}</td>
-                      <td className="py-4 px-4">{pesanan.namaCustomer}</td>
-                      <td className="py-4 px-4">{pesanan.namaDriver}</td>
+                  paginatedData.map((pesanan) => (
+                    <tr key={pesanan.id} className="border-b border-border/50 hover:bg-muted/30">
+                      <td className="py-4 px-4">{pesanan.id.slice(0, 8)}</td>
+                      <td className="py-4 px-4">{pesanan.customer?.nama || "-"}</td>
+                      <td className="py-4 px-4">{pesanan.mitra?.nama || "-"}</td>
                       <td className="py-4 px-4">
-                        {format(pesanan.tanggal, "EEEE, dd MMM yyyy", { locale: localeId })}
+                        {format(new Date(pesanan.tanggal_booking), "EEEE, dd MMM yyyy", { locale: localeId })}
                       </td>
-                      <td className="py-4 px-4">{pesanan.layanan}</td>
-                      <td className="py-4 px-4">{formatCurrency(pesanan.harga)}</td>
+                      <td className="py-4 px-4">{formatCurrency(pesanan.total_harga)}</td>
                       <td className="py-4 px-4 text-center">
                         {getStatusBadge(pesanan.status)}
                       </td>
@@ -264,7 +279,7 @@ const Pesanan = () => {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={8} className="py-8 text-center text-muted-foreground">
+                    <td colSpan={7} className="py-8 text-center text-muted-foreground">
                       Tidak ada data yang ditemukan
                     </td>
                   </tr>
