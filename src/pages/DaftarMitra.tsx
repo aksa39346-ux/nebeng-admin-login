@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, Calendar as CalendarIcon, Download, Eye, Lock, LockOpen } from "lucide-react";
+import { Search, Calendar as CalendarIcon, Download, Eye, Lock, LockOpen, Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
 import * as XLSX from "xlsx";
 import BlockMitraPopup from "@/components/BlockMitraPopup";
 import UnblockMitraPopup from "@/components/UnblockMitraPopup";
-import { useMitra } from "@/contexts/MitraContext";
+import { useUsers, useUpdateUserStatus } from "@/hooks/useUsers";
 import {
   Select,
   SelectContent,
@@ -24,22 +24,24 @@ import {
 
 const getStatusBadge = (status: string) => {
   switch (status) {
-    case "PENGAJUAN":
-      return <Badge className="bg-orange-500 hover:bg-orange-600 text-white text-xs">PENGAJUAN</Badge>;
-    case "TERVERIFIKASI":
-      return <Badge className="bg-green-500 hover:bg-green-600 text-white text-xs">TERVERIFIKASI</Badge>;
-    case "DITOLAK":
-      return <Badge className="bg-red-500 hover:bg-red-600 text-white text-xs">DITOLAK</Badge>;
-    case "DIBLOCK":
+    case "aktif":
+      return <Badge className="bg-green-500 hover:bg-green-600 text-white text-xs">AKTIF</Badge>;
+    case "tidak aktif":
+      return <Badge className="bg-orange-500 hover:bg-orange-600 text-white text-xs">TIDAK AKTIF</Badge>;
+    case "blokir":
       return <Badge className="bg-gray-500 hover:bg-gray-600 text-white text-xs">DIBLOCK</Badge>;
+    case "proses":
+      return <Badge className="bg-yellow-500 hover:bg-yellow-600 text-white text-xs">PROSES</Badge>;
     default:
-      return <Badge className="bg-gray-500 text-white text-xs">{status}</Badge>;
+      return <Badge className="bg-gray-500 text-white text-xs">{status.toUpperCase()}</Badge>;
   }
 };
 
 const DaftarMitra = () => {
   const navigate = useNavigate();
-  const { mitraList, blockMitra, unblockMitra } = useMitra();
+  const { data: users, isLoading } = useUsers("mitra");
+  const updateStatus = useUpdateUserStatus();
+  
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [entriesPerPage, setEntriesPerPage] = useState("10");
@@ -51,6 +53,8 @@ const DaftarMitra = () => {
   const [unblockSuccessOpen, setUnblockSuccessOpen] = useState(false);
   const [selectedMitraId, setSelectedMitraId] = useState<string | null>(null);
 
+  const mitraList = users || [];
+
   // Filter data based on search, date, and status filter
   const filteredData = useMemo(() => {
     return mitraList.filter((mitra) => {
@@ -58,19 +62,18 @@ const DaftarMitra = () => {
         mitra.nama.toLowerCase().includes(searchQuery.toLowerCase()) ||
         mitra.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
         mitra.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        mitra.noTlp.includes(searchQuery) ||
-        mitra.layanan.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        mitra.status.toLowerCase().includes(searchQuery.toLowerCase());
+        (mitra.no_hp || "").includes(searchQuery);
 
+      const mitraDate = new Date(mitra.created_at);
       const matchesDate = !selectedDate || 
-        (mitra.tanggal.getFullYear() === selectedDate.getFullYear() &&
-         mitra.tanggal.getMonth() === selectedDate.getMonth() &&
-         mitra.tanggal.getDate() === selectedDate.getDate());
+        (mitraDate.getFullYear() === selectedDate.getFullYear() &&
+         mitraDate.getMonth() === selectedDate.getMonth() &&
+         mitraDate.getDate() === selectedDate.getDate());
 
       const matchesStatus = 
         statusFilter === "SEMUA" ||
-        (statusFilter === "AKTIF" && mitra.status !== "DIBLOCK") ||
-        (statusFilter === "DIBLOCK" && mitra.status === "DIBLOCK");
+        (statusFilter === "AKTIF" && mitra.status !== "blokir") ||
+        (statusFilter === "DIBLOCK" && mitra.status === "blokir");
 
       return matchesSearch && matchesDate && matchesStatus;
     });
@@ -105,13 +108,12 @@ const DaftarMitra = () => {
     }
 
     const excelData = dataToExport.map(mitra => ({
-      "NO. ID": mitra.id,
+      "NO. ID": mitra.id.slice(0, 8),
       "NAMA": mitra.nama,
       "EMAIL": mitra.email,
-      "NO. TLP": mitra.noTlp,
-      "LAYANAN": mitra.layanan,
-      "STATUS": mitra.status,
-      "TANGGAL": format(mitra.tanggal, "dd-MM-yyyy")
+      "NO. TLP": mitra.no_hp || "-",
+      "STATUS": mitra.status.toUpperCase(),
+      "TANGGAL": format(new Date(mitra.created_at), "dd-MM-yyyy")
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(excelData);
@@ -120,7 +122,6 @@ const DaftarMitra = () => {
       { wch: 10 },
       { wch: 25 },
       { wch: 30 },
-      { wch: 15 },
       { wch: 15 },
       { wch: 15 },
       { wch: 12 },
@@ -142,7 +143,7 @@ const DaftarMitra = () => {
   const handleBlockConfirm = () => {
     setBlockPopupOpen(false);
     if (selectedMitraId) {
-      blockMitra(selectedMitraId);
+      updateStatus.mutate({ id: selectedMitraId, status: "blokir" });
     }
     setBlockSuccessOpen(true);
   };
@@ -156,7 +157,7 @@ const DaftarMitra = () => {
   const handleUnblockConfirm = () => {
     setUnblockPopupOpen(false);
     if (selectedMitraId) {
-      unblockMitra(selectedMitraId);
+      updateStatus.mutate({ id: selectedMitraId, status: "aktif" });
     }
     setUnblockSuccessOpen(true);
   };
@@ -184,6 +185,14 @@ const DaftarMitra = () => {
     return pages;
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <Card className="shadow-sm">
@@ -196,7 +205,7 @@ const DaftarMitra = () => {
             <div className="relative w-72">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
               <Input
-                placeholder="Search nama, email, ID, layanan..."
+                placeholder="Search nama, email, ID..."
                 value={searchQuery}
                 onChange={(e) => handleSearchChange(e.target.value)}
                 className="pl-10 h-10 bg-background border-border"
@@ -260,7 +269,6 @@ const DaftarMitra = () => {
                   <th className="text-left py-3 px-4 font-medium">NAMA</th>
                   <th className="text-left py-3 px-4 font-medium">EMAIL</th>
                   <th className="text-left py-3 px-4 font-medium">NO. TLP</th>
-                  <th className="text-left py-3 px-4 font-medium">LAYANAN</th>
                   <th className="text-left py-3 px-4 font-medium">STATUS</th>
                   <th className="text-center py-3 px-4 font-medium rounded-tr-lg">AKSI</th>
                 </tr>
@@ -268,12 +276,11 @@ const DaftarMitra = () => {
               <tbody>
                 {paginatedData.length > 0 ? (
                   paginatedData.map((mitra, index) => (
-                    <tr key={index} className="border-b border-border/50 hover:bg-muted/30">
-                      <td className="py-4 px-4">{mitra.id}</td>
+                    <tr key={mitra.id} className="border-b border-border/50 hover:bg-muted/30">
+                      <td className="py-4 px-4">{mitra.id.slice(0, 8)}</td>
                       <td className="py-4 px-4">{mitra.nama}</td>
                       <td className="py-4 px-4 text-primary">{mitra.email}</td>
-                      <td className="py-4 px-4">{mitra.noTlp}</td>
-                      <td className="py-4 px-4">{mitra.layanan}</td>
+                      <td className="py-4 px-4">{mitra.no_hp || "-"}</td>
                       <td className="py-4 px-4">
                         {getStatusBadge(mitra.status)}
                       </td>
@@ -287,7 +294,7 @@ const DaftarMitra = () => {
                           >
                             <Eye size={18} className="text-white" />
                           </Button>
-                          {mitra.status === "DIBLOCK" ? (
+                          {mitra.status === "blokir" ? (
                             <Button 
                               variant="ghost" 
                               size="icon" 
@@ -312,7 +319,7 @@ const DaftarMitra = () => {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={7} className="py-8 text-center text-muted-foreground">
+                    <td colSpan={6} className="py-8 text-center text-muted-foreground">
                       Tidak ada data yang ditemukan
                     </td>
                   </tr>

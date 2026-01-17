@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, Calendar as CalendarIcon, Download, Eye, Pencil } from "lucide-react";
+import { Search, Calendar as CalendarIcon, Download, Eye, Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -24,18 +24,18 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useRefund } from "@/contexts/RefundContext";
+import { useRefunds, useUpdateRefundStatus } from "@/hooks/useRefunds";
 
 const getStatusBadge = (status: string) => {
   switch (status) {
-    case "SELESAI":
+    case "aktif":
       return <Badge className="bg-green-500 hover:bg-green-600 text-white text-xs px-3 py-1 rounded-full">SELESAI</Badge>;
-    case "BATAL":
+    case "tidak aktif":
       return <Badge className="bg-orange-500 hover:bg-orange-600 text-white text-xs px-3 py-1 rounded-full">BATAL</Badge>;
-    case "PROSES":
+    case "proses":
       return <Badge className="bg-yellow-500 hover:bg-yellow-600 text-white text-xs px-3 py-1 rounded-full">PROSES</Badge>;
     default:
-      return <Badge className="bg-gray-500 text-white text-xs px-3 py-1 rounded-full">{status}</Badge>;
+      return <Badge className="bg-gray-500 text-white text-xs px-3 py-1 rounded-full">{status.toUpperCase()}</Badge>;
   }
 };
 
@@ -46,7 +46,8 @@ const formatCurrency = (amount: number | undefined) => {
 
 const Refund = () => {
   const navigate = useNavigate();
-  const { refundList, updateRefundStatus } = useRefund();
+  const { data: refunds, isLoading } = useRefunds();
+  const updateStatus = useUpdateRefundStatus();
   
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -54,23 +55,29 @@ const Refund = () => {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [statusFilter, setStatusFilter] = useState<string>("SEMUA");
 
+  const refundList = refunds || [];
+
   // Filter data based on search, date, and status filter
   const filteredData = useMemo(() => {
     return refundList.filter((refund) => {
+      const customerName = refund.customer?.nama || "";
+      
       const matchesSearch = searchQuery === "" || 
-        refund.namaCustomer.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        refund.namaDriver.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        refund.noOrder.includes(searchQuery) ||
-        refund.noTransaksi.toLowerCase().includes(searchQuery.toLowerCase());
+        customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        refund.id.includes(searchQuery) ||
+        refund.booking_id.includes(searchQuery);
 
+      const refundDate = new Date(refund.tanggal_pengajuan);
       const matchesDate = !selectedDate || 
-        (refund.tanggal.getFullYear() === selectedDate.getFullYear() &&
-         refund.tanggal.getMonth() === selectedDate.getMonth() &&
-         refund.tanggal.getDate() === selectedDate.getDate());
+        (refundDate.getFullYear() === selectedDate.getFullYear() &&
+         refundDate.getMonth() === selectedDate.getMonth() &&
+         refundDate.getDate() === selectedDate.getDate());
 
       const matchesStatus = 
         statusFilter === "SEMUA" ||
-        refund.status === statusFilter;
+        (statusFilter === "PROSES" && refund.status === "proses") ||
+        (statusFilter === "SELESAI" && refund.status === "aktif") ||
+        (statusFilter === "BATAL" && refund.status === "tidak aktif");
 
       return matchesSearch && matchesDate && matchesStatus;
     });
@@ -100,6 +107,10 @@ const Refund = () => {
     setCurrentPage(1);
   };
 
+  const handleUpdateStatus = (id: string, status: "aktif" | "tidak aktif" | "blokir" | "proses") => {
+    updateStatus.mutate({ id, status });
+  };
+
   // Download Excel function
   const handleDownload = () => {
     const dataToExport = filteredData;
@@ -109,20 +120,18 @@ const Refund = () => {
     }
 
     const excelData = dataToExport.map(refund => ({
-      "NO. ORDER": refund.noOrder,
-      "NAMA COSTUMER": refund.namaCustomer,
-      "NAMA DRIVER": refund.namaDriver,
-      "TANGGAL": format(refund.tanggal, "EEEE, dd MMM yyyy", { locale: localeId }),
-      "NO. TRANSAKSI": refund.noTransaksi,
-      "JUMLAH REFUND": formatCurrency(refund.jumlahRefund),
-      "STATUS": refund.status,
+      "NO. ORDER": refund.booking_id.slice(0, 8),
+      "NAMA COSTUMER": refund.customer?.nama || "-",
+      "TANGGAL": format(new Date(refund.tanggal_pengajuan), "EEEE, dd MMM yyyy", { locale: localeId }),
+      "NO. TRANSAKSI": refund.id.slice(0, 8),
+      "JUMLAH REFUND": formatCurrency(refund.jumlah_refund),
+      "STATUS": refund.status.toUpperCase(),
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(excelData);
 
     const columnWidths = [
       { wch: 12 },
-      { wch: 20 },
       { wch: 20 },
       { wch: 20 },
       { wch: 18 },
@@ -154,11 +163,19 @@ const Refund = () => {
     return pages;
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <Card className="shadow-sm">
         <CardHeader className="pb-4">
-          <CardTitle className="text-xl font-semibold">Daftar Pesanan</CardTitle>
+          <CardTitle className="text-xl font-semibold">Daftar Refund</CardTitle>
         </CardHeader>
         <CardContent>
           {/* Filters */}
@@ -229,7 +246,6 @@ const Refund = () => {
                 <tr className="bg-[#1e3a5f] text-white">
                   <th className="text-left py-3 px-4 font-medium rounded-tl-lg">NO. ORDER</th>
                   <th className="text-left py-3 px-4 font-medium">NAMA COSTUMER</th>
-                  <th className="text-left py-3 px-4 font-medium">NAMA DRIVER</th>
                   <th className="text-left py-3 px-4 font-medium">TANGGAL</th>
                   <th className="text-left py-3 px-4 font-medium">NO. TRANSAKSI</th>
                   <th className="text-left py-3 px-4 font-medium">JUMLAH REFUND</th>
@@ -239,16 +255,15 @@ const Refund = () => {
               </thead>
               <tbody>
                 {paginatedData.length > 0 ? (
-                  paginatedData.map((refund, index) => (
-                    <tr key={index} className="border-b border-border/50 hover:bg-muted/30">
-                      <td className="py-4 px-4">{refund.noOrder}</td>
-                      <td className="py-4 px-4">{refund.namaCustomer}</td>
-                      <td className="py-4 px-4">{refund.namaDriver}</td>
+                  paginatedData.map((refund) => (
+                    <tr key={refund.id} className="border-b border-border/50 hover:bg-muted/30">
+                      <td className="py-4 px-4">{refund.booking_id.slice(0, 8)}</td>
+                      <td className="py-4 px-4">{refund.customer?.nama || "-"}</td>
                       <td className="py-4 px-4">
-                        {format(refund.tanggal, "EEEE, dd MMM yyyy", { locale: localeId })}
+                        {format(new Date(refund.tanggal_pengajuan), "EEEE, dd MMM yyyy", { locale: localeId })}
                       </td>
-                      <td className="py-4 px-4">{refund.noTransaksi}</td>
-                      <td className="py-4 px-4">{formatCurrency(refund.jumlahRefund)}</td>
+                      <td className="py-4 px-4">{refund.id.slice(0, 8)}</td>
+                      <td className="py-4 px-4">{formatCurrency(refund.jumlah_refund)}</td>
                       <td className="py-4 px-4 text-center">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
@@ -258,19 +273,19 @@ const Refund = () => {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="center">
                             <DropdownMenuItem 
-                              onClick={() => updateRefundStatus(refund.id, "PROSES")}
+                              onClick={() => handleUpdateStatus(refund.id, "proses")}
                               className="cursor-pointer"
                             >
                               <Badge className="bg-yellow-500 text-white text-xs px-3 py-1 rounded-full">PROSES</Badge>
                             </DropdownMenuItem>
                             <DropdownMenuItem 
-                              onClick={() => updateRefundStatus(refund.id, "SELESAI")}
+                              onClick={() => handleUpdateStatus(refund.id, "aktif")}
                               className="cursor-pointer"
                             >
                               <Badge className="bg-green-500 text-white text-xs px-3 py-1 rounded-full">SELESAI</Badge>
                             </DropdownMenuItem>
                             <DropdownMenuItem 
-                              onClick={() => updateRefundStatus(refund.id, "BATAL")}
+                              onClick={() => handleUpdateStatus(refund.id, "tidak aktif")}
                               className="cursor-pointer"
                             >
                               <Badge className="bg-orange-500 text-white text-xs px-3 py-1 rounded-full">BATAL</Badge>
@@ -294,7 +309,7 @@ const Refund = () => {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={8} className="py-8 text-center text-muted-foreground">
+                    <td colSpan={7} className="py-8 text-center text-muted-foreground">
                       Tidak ada data yang ditemukan
                     </td>
                   </tr>
