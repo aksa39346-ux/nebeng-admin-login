@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ChevronLeft, Edit, Calendar, Search as SearchIcon, CheckCircle, XCircle, AlertTriangle, LockOpen } from "lucide-react";
+import { ChevronLeft, Edit, Calendar, Search as SearchIcon, CheckCircle, XCircle, LockOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -10,8 +10,10 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useMitra } from "@/contexts/MitraContext";
+import { Skeleton } from "@/components/ui/skeleton";
 import UnblockMitraPopup from "@/components/UnblockMitraPopup";
+import { useUser, useUpdateUserStatus, StatusType } from "@/hooks/useUsers";
+import { useVerifikasiByUser, useUpdateVerifikasi, VerificationStatus } from "@/hooks/useVerifikasi";
 
 const alasanPenolakan = [
   "Tidak Memenuhi Persyaratan Kendaraan",
@@ -31,7 +33,29 @@ const alasanPerubahan = [
   "Kesalahan penolakan sebelumnya",
 ];
 
-const getStatusBadge = (status: "PENGAJUAN" | "TERVERIFIKASI" | "DITOLAK" | "DIBLOCK") => {
+type DisplayStatus = "PENGAJUAN" | "TERVERIFIKASI" | "DITOLAK" | "DIBLOCK";
+
+const mapVerificationToDisplay = (status: VerificationStatus | undefined, userStatus: StatusType | undefined): DisplayStatus => {
+  if (userStatus === "blokir") return "DIBLOCK";
+  if (!status) return "PENGAJUAN";
+  switch (status) {
+    case "pending": return "PENGAJUAN";
+    case "verified": return "TERVERIFIKASI";
+    case "rejected": return "DITOLAK";
+    default: return "PENGAJUAN";
+  }
+};
+
+const mapDisplayToVerification = (status: DisplayStatus): VerificationStatus => {
+  switch (status) {
+    case "PENGAJUAN": return "pending";
+    case "TERVERIFIKASI": return "verified";
+    case "DITOLAK": return "rejected";
+    default: return "pending";
+  }
+};
+
+const getStatusBadge = (status: DisplayStatus) => {
   switch (status) {
     case "PENGAJUAN":
       return <Badge className="bg-orange-500 hover:bg-orange-600 text-white text-xs">Pengajuan</Badge>;
@@ -49,19 +73,20 @@ const getStatusBadge = (status: "PENGAJUAN" | "TERVERIFIKASI" | "DITOLAK" | "DIB
 const DetailMitra = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { mitraDetail, updateMitraStatus, unblockMitra } = useMitra();
   
-  const mitra = id ? mitraDetail[id] : null;
+  // Fetch data from database
+  const { data: mitra, isLoading: isLoadingMitra } = useUser(id || "");
+  const { data: verifikasi, isLoading: isLoadingVerifikasi } = useVerifikasiByUser(id || "");
+  const updateUserStatus = useUpdateUserStatus();
+  const updateVerifikasi = useUpdateVerifikasi();
   
-  // Get current status from context
-  const currentStatus = mitra?.status || "PENGAJUAN";
-  
-  // Check if mitra is blocked
-  const isBlocked = currentStatus === "DIBLOCK";
+  // Get current status
+  const currentStatus = mapVerificationToDisplay(verifikasi?.status, mitra?.status);
+  const isBlocked = mitra?.status === "blokir";
   
   // Edit mode state
   const [isEditMode, setIsEditMode] = useState(false);
-  const [editStatus, setEditStatus] = useState<"PENGAJUAN" | "TERVERIFIKASI" | "DITOLAK" | "DIBLOCK">(currentStatus);
+  const [editStatus, setEditStatus] = useState<DisplayStatus>(currentStatus);
   
   // Modal states
   const [showConfirmTolak, setShowConfirmTolak] = useState(false);
@@ -78,6 +103,26 @@ const DetailMitra = () => {
   const [catatanLainnya, setCatatanLainnya] = useState("");
   const [selectedAlasanPerubahan, setSelectedAlasanPerubahan] = useState("");
   
+  if (isLoadingMitra || isLoadingVerifikasi) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center gap-4">
+          <Skeleton className="h-8 w-8" />
+          <Skeleton className="h-6 w-48" />
+        </div>
+        <div className="bg-card rounded-lg p-6 shadow-sm">
+          <div className="flex items-center gap-4">
+            <Skeleton className="h-20 w-20 rounded-full" />
+            <div className="space-y-2">
+              <Skeleton className="h-6 w-40" />
+              <Skeleton className="h-4 w-24" />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  
   if (!mitra) {
     return (
       <div className="p-6">
@@ -93,7 +138,7 @@ const DetailMitra = () => {
   };
 
   const handleSave = () => {
-    if (!id) return;
+    if (!id || !verifikasi) return;
     
     // If changing to DITOLAK, show rejection reason modal
     if (editStatus === "DITOLAK" && currentStatus !== "DITOLAK") {
@@ -103,9 +148,15 @@ const DetailMitra = () => {
     
     // If changing to TERVERIFIKASI
     if (editStatus === "TERVERIFIKASI" && currentStatus !== "TERVERIFIKASI") {
-      updateMitraStatus(id, "TERVERIFIKASI");
-      setShowSuccessVerifikasi(true);
-      setIsEditMode(false);
+      updateVerifikasi.mutate(
+        { id: verifikasi.id, status: "verified" },
+        {
+          onSuccess: () => {
+            setShowSuccessVerifikasi(true);
+            setIsEditMode(false);
+          }
+        }
+      );
       return;
     }
     
@@ -125,29 +176,58 @@ const DetailMitra = () => {
   };
 
   const handleSubmitTolak = () => {
-    if (!id) return;
-    updateMitraStatus(id, "DITOLAK");
-    setShowAlasanTolak(false);
-    setShowSuccessTolak(true);
-    setSelectedAlasan("");
-    setCatatanLainnya("");
-    setIsEditMode(false);
+    if (!id || !verifikasi) return;
+    const catatan = selectedAlasan === "Lainnya" ? catatanLainnya : selectedAlasan;
+    updateVerifikasi.mutate(
+      { id: verifikasi.id, status: "rejected", catatan },
+      {
+        onSuccess: () => {
+          setShowAlasanTolak(false);
+          setShowSuccessTolak(true);
+          setSelectedAlasan("");
+          setCatatanLainnya("");
+          setIsEditMode(false);
+        }
+      }
+    );
   };
 
   const handleUbahKeProses = () => {
-    if (!id) return;
-    updateMitraStatus(id, "PENGAJUAN");
-    setEditStatus("PENGAJUAN");
-    setShowUbahStatus(false);
-    setSelectedAlasanPerubahan("");
-    setIsEditMode(false);
+    if (!id || !verifikasi) return;
+    updateVerifikasi.mutate(
+      { id: verifikasi.id, status: "pending" },
+      {
+        onSuccess: () => {
+          setEditStatus("PENGAJUAN");
+          setShowUbahStatus(false);
+          setSelectedAlasanPerubahan("");
+          setIsEditMode(false);
+        }
+      }
+    );
   };
 
   const handleUnblock = () => {
     if (!id) return;
-    unblockMitra(id);
-    setShowUnblockConfirm(false);
-    setShowUnblockSuccess(true);
+    updateUserStatus.mutate(
+      { id, status: "aktif" },
+      {
+        onSuccess: () => {
+          setShowUnblockConfirm(false);
+          setShowUnblockSuccess(true);
+        }
+      }
+    );
+  };
+
+  // Format date for display
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return "-";
+    return new Date(dateString).toLocaleDateString("id-ID", {
+      day: "2-digit",
+      month: "long",
+      year: "numeric"
+    });
   };
 
   return (
@@ -171,7 +251,7 @@ const DetailMitra = () => {
           <div className="flex items-center gap-4">
             <div className="relative">
               <Avatar className="h-20 w-20">
-                <AvatarImage src="/placeholder.svg" />
+                <AvatarImage src={mitra.foto_profil || "/placeholder.svg"} />
                 <AvatarFallback className="bg-muted text-lg">
                   {mitra.nama.split(" ").map(n => n[0]).join("")}
                 </AvatarFallback>
@@ -184,9 +264,9 @@ const DetailMitra = () => {
             </div>
             <div>
               <h2 className="text-lg font-semibold">{mitra.nama}</h2>
-              <p className="text-muted-foreground text-sm">{mitra.layanan}</p>
+              <p className="text-muted-foreground text-sm">Nebeng Motor</p>
               <div className="flex items-center gap-2 mt-1">
-                <span className="text-primary font-medium">{mitra.kode}</span>
+                <span className="text-primary font-medium">{mitra.id.slice(0, 8).toUpperCase()}</span>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-primary">
                   <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
                   <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
@@ -194,7 +274,7 @@ const DetailMitra = () => {
               </div>
               <div className="mt-2">
                 {isEditMode ? (
-                  <Select value={editStatus} onValueChange={(val) => setEditStatus(val as "PENGAJUAN" | "TERVERIFIKASI" | "DITOLAK" | "DIBLOCK")}>
+                  <Select value={editStatus} onValueChange={(val) => setEditStatus(val as DisplayStatus)}>
                     <SelectTrigger className="w-40 h-8">
                       <SelectValue />
                     </SelectTrigger>
@@ -226,8 +306,9 @@ const DetailMitra = () => {
               <Button 
                 className="gap-2 bg-primary hover:bg-primary/90"
                 onClick={handleSave}
+                disabled={updateVerifikasi.isPending}
               >
-                Simpan
+                {updateVerifikasi.isPending ? "Menyimpan..." : "Simpan"}
               </Button>
             ) : isBlocked ? (
               <Button 
@@ -256,30 +337,30 @@ const DetailMitra = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="text-sm text-muted-foreground">Nama Lengkap</label>
-              <Input value={mitra.informasiPribadi.namaLengkap} readOnly className="mt-1 bg-muted/50" />
+              <Input value={mitra.nama} readOnly className="mt-1 bg-muted/50" />
             </div>
             <div>
               <label className="text-sm text-muted-foreground">Email</label>
-              <Input value={mitra.informasiPribadi.email} readOnly className="mt-1 bg-muted/50" />
+              <Input value={mitra.email} readOnly className="mt-1 bg-muted/50" />
             </div>
             <div>
               <label className="text-sm text-muted-foreground">Tempat Lahir</label>
-              <Input value={mitra.informasiPribadi.tempatLahir} readOnly className="mt-1 bg-muted/50" />
+              <Input value={verifikasi?.tempat_lahir || "-"} readOnly className="mt-1 bg-muted/50" />
             </div>
             <div>
               <label className="text-sm text-muted-foreground">Tanggal Lahir</label>
               <div className="relative mt-1">
-                <Input value={mitra.informasiPribadi.tanggalLahir} readOnly className="bg-muted/50 pr-10" />
+                <Input value={formatDate(mitra.tanggal_lahir)} readOnly className="bg-muted/50 pr-10" />
                 <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
               </div>
             </div>
             <div>
               <label className="text-sm text-muted-foreground">Jenis Kelamin</label>
-              <Input value={mitra.informasiPribadi.jenisKelamin} readOnly className="mt-1 bg-muted/50" />
+              <Input value={verifikasi?.jenis_kelamin || "-"} readOnly className="mt-1 bg-muted/50" />
             </div>
             <div>
               <label className="text-sm text-muted-foreground">No. Tlp</label>
-              <Input value={mitra.informasiPribadi.noTlp} readOnly className="mt-1 bg-muted/50" />
+              <Input value={mitra.no_hp || "-"} readOnly className="mt-1 bg-muted/50" />
             </div>
           </div>
         </div>
@@ -291,68 +372,61 @@ const DetailMitra = () => {
             <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="text-sm text-muted-foreground">Nama Lengkap</label>
-                <Input value={mitra.informasiKTP.namaLengkap} readOnly className="mt-1 bg-muted/50" />
+                <Input value={verifikasi?.nama_ktp || "-"} readOnly className="mt-1 bg-muted/50" />
               </div>
               <div>
                 <label className="text-sm text-muted-foreground">NIK</label>
-                <Input value={mitra.informasiKTP.nik} readOnly className="mt-1 bg-muted/50" />
+                <Input value={verifikasi?.no_ktp || "-"} readOnly className="mt-1 bg-muted/50" />
               </div>
               <div>
                 <label className="text-sm text-muted-foreground">Jenis Kelamin</label>
-                <Input value={mitra.informasiKTP.jenisKelamin} readOnly className="mt-1 bg-muted/50" />
+                <Input value={verifikasi?.jenis_kelamin || "-"} readOnly className="mt-1 bg-muted/50" />
               </div>
               <div>
-                <label className="text-sm text-muted-foreground">Tangal Lahir</label>
+                <label className="text-sm text-muted-foreground">Tanggal Lahir</label>
                 <div className="relative mt-1">
-                  <Input value={mitra.informasiKTP.tanggalLahir} readOnly className="bg-muted/50 pr-10" />
+                  <Input value={formatDate(verifikasi?.tanggal_lahir_ktp || null)} readOnly className="bg-muted/50 pr-10" />
                   <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
                 </div>
               </div>
             </div>
-            <div 
-              className="relative w-32 h-20 bg-muted rounded-lg flex items-center justify-center overflow-hidden border cursor-pointer hover:opacity-80 transition-opacity"
-              onClick={() => setPreviewImage({ src: mitra.informasiKTP.fotoKTP, title: "Foto KTP" })}
-            >
-              <img src={mitra.informasiKTP.fotoKTP} alt="KTP" className="w-full h-full object-cover" />
-              <div className="absolute bottom-1 right-1 bg-primary/80 rounded-full p-1">
-                <SearchIcon size={12} className="text-white" />
+            {verifikasi?.foto_ktp && (
+              <div 
+                className="relative w-32 h-20 bg-muted rounded-lg flex items-center justify-center overflow-hidden border cursor-pointer hover:opacity-80 transition-opacity"
+                onClick={() => setPreviewImage({ src: verifikasi.foto_ktp!, title: "Foto KTP" })}
+              >
+                <img src={verifikasi.foto_ktp} alt="KTP" className="w-full h-full object-cover" />
+                <div className="absolute bottom-1 right-1 bg-primary/80 rounded-full p-1">
+                  <SearchIcon size={12} className="text-white" />
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
 
-        {/* Informasi SIM */}
+        {/* Informasi SIM - placeholder since we don't have SIM data in DB yet */}
         <div className="mt-8">
           <h3 className="text-lg font-semibold mb-4">Informasi SIM</h3>
           <div className="flex gap-6">
             <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="text-sm text-muted-foreground">Nama Lengkap</label>
-                <Input value={mitra.informasiSIM.namaLengkap} readOnly className="mt-1 bg-muted/50" />
+                <Input value={verifikasi?.nama_ktp || "-"} readOnly className="mt-1 bg-muted/50" />
               </div>
               <div>
                 <label className="text-sm text-muted-foreground">Nomor SIM</label>
-                <Input value={mitra.informasiSIM.nomorSIM} readOnly className="mt-1 bg-muted/50" />
+                <Input value="-" readOnly className="mt-1 bg-muted/50" />
               </div>
               <div>
                 <label className="text-sm text-muted-foreground">Jenis Kelamin</label>
-                <Input value={mitra.informasiSIM.jenisKelamin} readOnly className="mt-1 bg-muted/50" />
+                <Input value={verifikasi?.jenis_kelamin || "-"} readOnly className="mt-1 bg-muted/50" />
               </div>
               <div>
-                <label className="text-sm text-muted-foreground">Tangal Lahir</label>
+                <label className="text-sm text-muted-foreground">Tanggal Lahir</label>
                 <div className="relative mt-1">
-                  <Input value={mitra.informasiSIM.tanggalLahir} readOnly className="bg-muted/50 pr-10" />
+                  <Input value={formatDate(verifikasi?.tanggal_lahir_ktp || null)} readOnly className="bg-muted/50 pr-10" />
                   <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
                 </div>
-              </div>
-            </div>
-            <div 
-              className="relative w-32 h-20 bg-muted rounded-lg flex items-center justify-center overflow-hidden border cursor-pointer hover:opacity-80 transition-opacity"
-              onClick={() => setPreviewImage({ src: mitra.informasiSIM.fotoSIM, title: "Foto SIM" })}
-            >
-              <img src={mitra.informasiSIM.fotoSIM} alt="SIM" className="w-full h-full object-cover" />
-              <div className="absolute bottom-1 right-1 bg-primary/80 rounded-full p-1">
-                <SearchIcon size={12} className="text-white" />
               </div>
             </div>
           </div>
@@ -421,181 +495,140 @@ const DetailMitra = () => {
             </p>
             <RadioGroup value={selectedAlasan} onValueChange={setSelectedAlasan}>
               {alasanPenolakan.map((alasan) => (
-                <div key={alasan} className="flex items-center space-x-2 py-1">
+                <div key={alasan} className="flex items-center space-x-2 py-2">
                   <RadioGroupItem value={alasan} id={alasan} />
-                  <Label htmlFor={alasan} className="text-sm font-normal cursor-pointer">
-                    {alasan}
-                  </Label>
+                  <Label htmlFor={alasan} className="cursor-pointer">{alasan}</Label>
                 </div>
               ))}
             </RadioGroup>
-            
             {selectedAlasan === "Lainnya" && (
               <Textarea
-                placeholder="Tambahkan catatan (wajib jika memilih 'Lainnya')"
+                placeholder="Tulis alasan lainnya..."
                 value={catatanLainnya}
                 onChange={(e) => setCatatanLainnya(e.target.value)}
                 className="mt-4"
-                rows={3}
               />
             )}
-            
-            <div className="flex flex-col gap-2 mt-6">
-              <Button 
-                className="w-full bg-red-500 hover:bg-red-600"
-                onClick={handleSubmitTolak}
-                disabled={!selectedAlasan || (selectedAlasan === "Lainnya" && !catatanLainnya)}
-              >
-                Tolak verifikasi
-              </Button>
-              <Button 
-                variant="outline" 
-                className="w-full"
-                onClick={() => setShowAlasanTolak(false)}
-              >
-                Kembali
-              </Button>
-            </div>
+            <Button 
+              className="w-full mt-6 bg-red-500 hover:bg-red-600"
+              onClick={handleSubmitTolak}
+              disabled={!selectedAlasan || (selectedAlasan === "Lainnya" && !catatanLainnya.trim()) || updateVerifikasi.isPending}
+            >
+              {updateVerifikasi.isPending ? "Memproses..." : "Konfirmasi Penolakan"}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
 
-      {/* Modal: Success Verifikasi */}
+      {/* Modal: Sukses Verifikasi */}
       <Dialog open={showSuccessVerifikasi} onOpenChange={setShowSuccessVerifikasi}>
         <DialogContent className="sm:max-w-md text-center">
           <div className="flex flex-col items-center py-4">
-            <h2 className="text-lg font-semibold mb-2">
-              Anda telah berhasil memverifikasi mitra.
-            </h2>
-            <p className="text-muted-foreground mb-6">Semua data sudah diperbarui.</p>
             <div className="relative mb-6">
-              <div className="w-20 h-24 bg-blue-100 rounded-lg flex items-center justify-center">
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" className="text-primary">
-                  <circle cx="9" cy="7" r="4" stroke="currentColor" strokeWidth="2" />
-                  <path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2" stroke="currentColor" strokeWidth="2" />
-                  <rect x="12" y="8" width="8" height="10" rx="1" stroke="currentColor" strokeWidth="1.5" fill="white" />
-                  <path d="M14 11h4M14 13h4M14 15h2" stroke="currentColor" strokeWidth="1" />
+              <div className="w-20 h-24 bg-muted rounded-lg flex items-center justify-center">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-muted-foreground">
+                  <path d="M9 12h6M9 16h6M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z" />
                 </svg>
               </div>
-              <div className="absolute -bottom-1 -right-1 bg-green-500 rounded-full p-0.5">
-                <CheckCircle size={18} className="text-white" />
+              <div className="absolute -bottom-2 -right-2 bg-green-500 rounded-full p-1">
+                <CheckCircle size={20} className="text-white" />
               </div>
             </div>
+            <h2 className="text-lg font-semibold mb-2">
+              Verifikasi Mitra Berhasil
+            </h2>
+            <p className="text-muted-foreground mb-6">Mitra telah berhasil diverifikasi</p>
             <Button 
-              className="min-w-24"
               onClick={() => setShowSuccessVerifikasi(false)}
+              className="min-w-24"
             >
-              Oke
+              Tutup
             </Button>
           </div>
         </DialogContent>
       </Dialog>
 
-      {/* Modal: Success Tolak */}
+      {/* Modal: Sukses Tolak */}
       <Dialog open={showSuccessTolak} onOpenChange={setShowSuccessTolak}>
         <DialogContent className="sm:max-w-md text-center">
           <div className="flex flex-col items-center py-4">
-            <h2 className="text-lg font-semibold mb-6">
-              Anda telah menolak verifikasi mitra
-            </h2>
             <div className="relative mb-6">
-              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="none">
-                  <circle cx="12" cy="12" r="10" stroke="hsl(var(--destructive))" strokeWidth="2" />
-                  <path d="M8 8l8 8M16 8l-8 8" stroke="hsl(var(--destructive))" strokeWidth="2" strokeLinecap="round" />
+              <div className="w-20 h-24 bg-muted rounded-lg flex items-center justify-center">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-muted-foreground">
+                  <path d="M9 12h6M9 16h6M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z" />
                 </svg>
               </div>
-              <div className="absolute -top-1 -right-1 bg-red-500 text-white text-[8px] font-bold px-1 rounded transform rotate-12">
-                CANCELLED
+              <div className="absolute -bottom-2 -right-2 bg-red-500 rounded-full p-1">
+                <XCircle size={20} className="text-white" />
               </div>
             </div>
+            <h2 className="text-lg font-semibold mb-2">
+              Penolakan Berhasil
+            </h2>
+            <p className="text-muted-foreground mb-6">Verifikasi mitra telah ditolak</p>
             <Button 
-              className="min-w-24"
               onClick={() => setShowSuccessTolak(false)}
+              className="min-w-24"
             >
-              Oke
+              Tutup
             </Button>
           </div>
         </DialogContent>
       </Dialog>
 
-      {/* Modal: Ubah Status ke Proses */}
+      {/* Modal: Ubah Status */}
       <Dialog open={showUbahStatus} onOpenChange={setShowUbahStatus}>
         <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Ubah Status ke Pengajuan</DialogTitle>
+          </DialogHeader>
           <div className="py-4">
-            <div className="flex items-center gap-2 text-amber-600 mb-2">
-              <AlertTriangle size={20} />
-              <h2 className="text-lg font-semibold">Konfirmasi Perubahan Status</h2>
-            </div>
             <p className="text-sm text-muted-foreground mb-4">
-              Anda ingin mengubah status dari Ditolak menjadi Proses.<br />
-              Silakan pilih alasan perubahan.
+              Pilih alasan perubahan status:
             </p>
-            
-            <Select value={selectedAlasanPerubahan} onValueChange={setSelectedAlasanPerubahan}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Pilih Alasan Perubahan" />
-              </SelectTrigger>
-              <SelectContent>
-                {alasanPerubahan.map((alasan) => (
-                  <SelectItem key={alasan} value={alasan}>
-                    {alasan}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            
-            <div className="flex gap-3 mt-6">
-              <Button 
-                variant="outline" 
-                onClick={() => setShowUbahStatus(false)}
-              >
-                Batal
-              </Button>
-              <Button 
-                className="bg-primary"
-                onClick={handleUbahKeProses}
-                disabled={!selectedAlasanPerubahan}
-              >
-                Ubah ke proses verifikasi
-              </Button>
-            </div>
+            <RadioGroup value={selectedAlasanPerubahan} onValueChange={setSelectedAlasanPerubahan}>
+              {alasanPerubahan.map((alasan) => (
+                <div key={alasan} className="flex items-center space-x-2 py-2">
+                  <RadioGroupItem value={alasan} id={`perubahan-${alasan}`} />
+                  <Label htmlFor={`perubahan-${alasan}`} className="cursor-pointer">{alasan}</Label>
+                </div>
+              ))}
+            </RadioGroup>
+            <Button 
+              className="w-full mt-6"
+              onClick={handleUbahKeProses}
+              disabled={!selectedAlasanPerubahan || updateVerifikasi.isPending}
+            >
+              {updateVerifikasi.isPending ? "Memproses..." : "Konfirmasi Perubahan"}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
 
-      {/* Modal: Image Preview */}
+      {/* Image Preview Modal */}
       <Dialog open={!!previewImage} onOpenChange={() => setPreviewImage(null)}>
-        <DialogContent className="sm:max-w-2xl p-0 overflow-hidden">
-          <DialogHeader className="p-4 pb-0">
+        <DialogContent className="sm:max-w-2xl">
+          <DialogHeader>
             <DialogTitle>{previewImage?.title}</DialogTitle>
           </DialogHeader>
-          <div className="p-4">
-            <div className="w-full aspect-[3/2] bg-muted rounded-lg overflow-hidden flex items-center justify-center">
-              <img 
-                src={previewImage?.src} 
-                alt={previewImage?.title} 
-                className="max-w-full max-h-full object-contain"
-              />
-            </div>
+          <div className="flex justify-center">
+            <img 
+              src={previewImage?.src} 
+              alt={previewImage?.title} 
+              className="max-w-full max-h-[70vh] object-contain"
+            />
           </div>
         </DialogContent>
       </Dialog>
 
-      {/* Modal: Unblock Confirmation */}
+      {/* Unblock Popup */}
       <UnblockMitraPopup
         open={showUnblockConfirm}
-        onOpenChange={setShowUnblockConfirm}
+        onClose={() => setShowUnblockConfirm(false)}
         onConfirm={handleUnblock}
-        type="confirm"
-      />
-
-      {/* Modal: Unblock Success */}
-      <UnblockMitraPopup
-        open={showUnblockSuccess}
-        onOpenChange={setShowUnblockSuccess}
-        onConfirm={() => {}}
-        type="success"
+        mitraName={mitra.nama}
+        showSuccess={showUnblockSuccess}
+        onCloseSuccess={() => setShowUnblockSuccess(false)}
       />
     </div>
   );
