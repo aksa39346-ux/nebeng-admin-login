@@ -623,12 +623,15 @@ const DetailMitra = () => {
 
       {/* Unblock Popup */}
       <UnblockMitraPopup
-        open={showUnblockConfirm}
-        onClose={() => setShowUnblockConfirm(false)}
+        open={showUnblockConfirm || showUnblockSuccess}
+        onOpenChange={(open) => {
+          if (!open) {
+            setShowUnblockConfirm(false);
+            setShowUnblockSuccess(false);
+          }
+        }}
         onConfirm={handleUnblock}
-        mitraName={mitra.nama}
-        showSuccess={showUnblockSuccess}
-        onCloseSuccess={() => setShowUnblockSuccess(false)}
+        type={showUnblockSuccess ? "success" : "confirm"}
       />
     </div>
   );

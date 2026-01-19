@@ -650,22 +650,28 @@ const DetailCustomer = () => {
 
       {/* Block Customer Popup */}
       <BlockCustomerPopup
-        open={showBlockConfirm}
-        onClose={() => setShowBlockConfirm(false)}
+        open={showBlockConfirm || showBlockSuccess}
+        onOpenChange={(open) => {
+          if (!open) {
+            setShowBlockConfirm(false);
+            setShowBlockSuccess(false);
+          }
+        }}
         onConfirm={handleBlock}
-        customerName={customer.nama}
-        showSuccess={showBlockSuccess}
-        onCloseSuccess={() => setShowBlockSuccess(false)}
+        type={showBlockSuccess ? "success" : "confirm"}
       />
 
       {/* Unblock Customer Popup */}
       <UnblockCustomerPopup
-        open={showUnblockConfirm}
-        onClose={() => setShowUnblockConfirm(false)}
+        open={showUnblockConfirm || showUnblockSuccess}
+        onOpenChange={(open) => {
+          if (!open) {
+            setShowUnblockConfirm(false);
+            setShowUnblockSuccess(false);
+          }
+        }}
         onConfirm={handleUnblock}
-        customerName={customer.nama}
-        showSuccess={showUnblockSuccess}
-        onCloseSuccess={() => setShowUnblockSuccess(false)}
+        type={showUnblockSuccess ? "success" : "confirm"}
       />
     </div>
   );
