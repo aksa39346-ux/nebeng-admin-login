@@ -5,27 +5,71 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { useLaporan } from "@/contexts/LaporanContext";
-import { useMitra } from "@/contexts/MitraContext";
-import { useCustomer } from "@/contexts/CustomerContext";
+import { Skeleton } from "@/components/ui/skeleton";
 import BlockLaporanPopup from "@/components/BlockLaporanPopup";
 import SaveLaporanPopup from "@/components/SaveLaporanPopup";
 import { toast } from "sonner";
+import { useLaporanDetail, useUpdateLaporan } from "@/hooks/useLaporan";
+import { useUser, useUpdateUserStatus } from "@/hooks/useUsers";
+import { useVerifikasiByUser } from "@/hooks/useVerifikasi";
+import { useBooking } from "@/hooks/useBookings";
+import { useKendaraanByMitra } from "@/hooks/useKendaraan";
 
 const DetailLaporan = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { getLaporanDetail, updateLaporan } = useLaporan();
-  const { blockMitra } = useMitra();
-  const { blockCustomer } = useCustomer();
-  const laporan = getLaporanDetail(id || "");
+  
+  // Fetch laporan data
+  const { data: laporan, isLoading: isLoadingLaporan } = useLaporanDetail(id || "");
+  const updateLaporan = useUpdateLaporan();
+  const updateUserStatus = useUpdateUserStatus();
+  
+  // Fetch related booking if exists
+  const { data: booking } = useBooking(laporan?.booking_id || "");
+  
+  // Fetch pelapor and dilaporkan user details
+  const { data: pelaporUser } = useUser(laporan?.pelapor_id || "");
+  const { data: dilaporkanUser } = useUser(laporan?.dilaporkan_id || "");
+  
+  // Fetch verifikasi for both users
+  const { data: pelaporVerifikasi } = useVerifikasiByUser(laporan?.pelapor_id || "");
+  const { data: dilaporkanVerifikasi } = useVerifikasiByUser(laporan?.dilaporkan_id || "");
+  
+  // Fetch kendaraan if dilaporkan is mitra
+  const { data: kendaraanList } = useKendaraanByMitra(
+    dilaporkanUser?.role === "mitra" ? dilaporkanUser.id : ""
+  );
+  const kendaraan = kendaraanList?.[0];
 
   const [showBlockConfirm, setShowBlockConfirm] = useState(false);
   const [showBlockSuccess, setShowBlockSuccess] = useState(false);
   const [showSaveSuccess, setShowSaveSuccess] = useState(false);
   const [showMitraDetail, setShowMitraDetail] = useState(false);
-  const [editedLaporan, setEditedLaporan] = useState(laporan?.laporan || "");
+  const [editedLaporan, setEditedLaporan] = useState("");
   const [isEditing, setIsEditing] = useState(false);
+
+  // Update editedLaporan when laporan data loads
+  if (laporan && !editedLaporan && laporan.hasil_investigasi) {
+    setEditedLaporan(laporan.hasil_investigasi);
+  }
+
+  if (isLoadingLaporan) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center gap-4">
+          <Skeleton className="h-8 w-8" />
+          <Skeleton className="h-6 w-48" />
+        </div>
+        <Card>
+          <CardContent className="p-6 space-y-4">
+            <Skeleton className="h-8 w-full" />
+            <Skeleton className="h-20 w-full" />
+            <Skeleton className="h-40 w-full" />
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   if (!laporan) {
     return (
@@ -35,31 +79,58 @@ const DetailLaporan = () => {
     );
   }
 
+  // Determine who is customer and who is mitra based on roles
+  const customerUser = pelaporUser?.role === "customer" ? pelaporUser : dilaporkanUser;
+  const mitraUser = pelaporUser?.role === "mitra" ? pelaporUser : dilaporkanUser;
+  const customerVerifikasi = pelaporUser?.role === "customer" ? pelaporVerifikasi : dilaporkanVerifikasi;
+  const mitraVerifikasi = pelaporUser?.role === "mitra" ? pelaporVerifikasi : dilaporkanVerifikasi;
+
   const handleCopyId = (text: string) => {
     navigator.clipboard.writeText(text);
     toast.success("ID berhasil disalin");
   };
 
   const handleBlockConfirm = (blockType: "mitra" | "customer") => {
-    if (blockType === "mitra") {
-      blockMitra(laporan.mitraId);
-      toast.success(`Mitra ${laporan.namaMitra} berhasil diblokir`);
-    } else {
-      blockCustomer(laporan.customerId);
-      toast.success(`Customer ${laporan.namaCustomer} berhasil diblokir`);
-    }
-    setShowBlockConfirm(false);
-    setShowBlockSuccess(true);
+    const userId = blockType === "mitra" ? mitraUser?.id : customerUser?.id;
+    if (!userId) return;
+    
+    updateUserStatus.mutate(
+      { id: userId, status: "blokir" },
+      {
+        onSuccess: () => {
+          toast.success(`${blockType === "mitra" ? "Mitra" : "Customer"} berhasil diblokir`);
+          setShowBlockConfirm(false);
+          setShowBlockSuccess(true);
+        }
+      }
+    );
   };
 
   const handleSaveLaporan = () => {
-    updateLaporan(laporan.id, editedLaporan);
-    setIsEditing(false);
-    setShowSaveSuccess(true);
+    if (!laporan?.id) return;
+    
+    updateLaporan.mutate(
+      { id: laporan.id, hasil_investigasi: editedLaporan },
+      {
+        onSuccess: () => {
+          setIsEditing(false);
+          setShowSaveSuccess(true);
+        }
+      }
+    );
   };
 
   const handleTanggapi = () => {
     setShowMitraDetail(true);
+  };
+
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return "-";
+    return new Date(dateString).toLocaleDateString("id-ID", {
+      day: "2-digit",
+      month: "long",
+      year: "numeric"
+    });
   };
 
   // Detail Laporan View
@@ -85,15 +156,19 @@ const DetailLaporan = () => {
             <div className="flex items-center justify-between">
               <span className="text-lg font-medium">ID Pesanan :</span>
               <div className="flex items-center gap-2">
-                <span className="font-semibold">NEBENG-A9823018734710</span>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-6 w-6"
-                  onClick={() => handleCopyId("NEBENG-A9823018734710")}
-                >
-                  <Copy size={16} />
-                </Button>
+                <span className="font-semibold">
+                  {booking?.id ? `NEBENG-${booking.id.slice(0, 8).toUpperCase()}` : "-"}
+                </span>
+                {booking?.id && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6"
+                    onClick={() => handleCopyId(booking.id)}
+                  >
+                    <Copy size={16} />
+                  </Button>
+                )}
               </div>
             </div>
 
@@ -103,15 +178,15 @@ const DetailLaporan = () => {
               <div className="flex items-center gap-4">
                 <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden">
                   <img
-                    src="/placeholder.svg"
-                    alt={laporan.namaCustomer}
+                    src={customerUser?.foto_profil || "/placeholder.svg"}
+                    alt={customerUser?.nama || "Customer"}
                     className="w-full h-full object-cover"
                   />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-lg">{laporan.namaCustomer}</h3>
+                  <h3 className="font-semibold text-lg">{customerUser?.nama || "-"}</h3>
                   <p className="text-muted-foreground text-sm">Costumer</p>
-                  <p className="text-xs text-primary">ID: {laporan.customerId}</p>
+                  <p className="text-xs text-primary">ID: {customerUser?.id.slice(0, 8).toUpperCase()}</p>
                 </div>
               </div>
 
@@ -120,20 +195,20 @@ const DetailLaporan = () => {
                 <div className="flex items-center gap-4">
                   <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center overflow-hidden">
                     <img
-                      src="/placeholder.svg"
-                      alt={laporan.namaMitra}
+                      src={mitraUser?.foto_profil || "/placeholder.svg"}
+                      alt={mitraUser?.nama || "Mitra"}
                       className="w-full h-full object-cover"
                     />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-lg">{laporan.namaMitra}</h3>
+                    <h3 className="font-semibold text-lg">{mitraUser?.nama || "-"}</h3>
                     <p className="text-muted-foreground text-sm">Mitra</p>
                   </div>
                 </div>
                 <div className="text-right">
                   <p className="text-xs text-muted-foreground">ID MITRA</p>
                   <div className="flex items-center gap-1">
-                    <span className="text-primary font-medium">{laporan.mitraId}</span>
+                    <span className="text-primary font-medium">{mitraUser?.id.slice(0, 8).toUpperCase()}</span>
                     <ExternalLink size={14} className="text-primary" />
                   </div>
                 </div>
@@ -146,16 +221,16 @@ const DetailLaporan = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-sm text-muted-foreground">Nama Lengkap</label>
-                  <Input value={laporan.namaCustomer} disabled className="mt-1 bg-gray-50" />
+                  <Input value={customerUser?.nama || "-"} disabled className="mt-1 bg-gray-50" />
                 </div>
                 <div>
                   <label className="text-sm text-muted-foreground">No. Tlp</label>
-                  <Input value={laporan.customerPhone} disabled className="mt-1 bg-gray-50" />
+                  <Input value={customerUser?.no_hp || "-"} disabled className="mt-1 bg-gray-50" />
                 </div>
               </div>
               <div className="mt-4">
                 <label className="text-sm text-muted-foreground">Catatan Untuk Driver</label>
-                <Input value={laporan.customerNote} disabled className="mt-1 bg-gray-50" />
+                <Input value={booking?.catatan || "-"} disabled className="mt-1 bg-gray-50" />
               </div>
             </div>
 
@@ -165,31 +240,31 @@ const DetailLaporan = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-sm text-muted-foreground">Nama Lengkap</label>
-                  <Input value={laporan.namaMitra} disabled className="mt-1 bg-gray-50" />
+                  <Input value={mitraUser?.nama || "-"} disabled className="mt-1 bg-gray-50" />
                 </div>
                 <div>
                   <label className="text-sm text-muted-foreground">No. Tlp</label>
-                  <Input value={laporan.mitraPhone} disabled className="mt-1 bg-gray-50" />
+                  <Input value={mitraUser?.no_hp || "-"} disabled className="mt-1 bg-gray-50" />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4 mt-4">
                 <div>
                   <label className="text-sm text-muted-foreground">Kendaraan</label>
-                  <Input value={laporan.mitraKendaraan} disabled className="mt-1 bg-gray-50" />
+                  <Input value={kendaraan?.jenis_kendaraan || "-"} disabled className="mt-1 bg-gray-50" />
                 </div>
                 <div>
                   <label className="text-sm text-muted-foreground">Merk Kendaraan</label>
-                  <Input value={laporan.mitraMerkKendaraan} disabled className="mt-1 bg-gray-50" />
+                  <Input value={kendaraan?.merk || "-"} disabled className="mt-1 bg-gray-50" />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4 mt-4">
                 <div>
                   <label className="text-sm text-muted-foreground">Plat Nomor Kendaraan</label>
-                  <Input value={laporan.mitraPlatNomor} disabled className="mt-1 bg-gray-50" />
+                  <Input value={kendaraan?.plat_nomor || "-"} disabled className="mt-1 bg-gray-50" />
                 </div>
                 <div>
-                  <label className="text-sm text-muted-foreground">Merk Kendaraan</label>
-                  <Input value={laporan.mitraMerkKendaraan} disabled className="mt-1 bg-gray-50" />
+                  <label className="text-sm text-muted-foreground">Model Kendaraan</label>
+                  <Input value={kendaraan?.model || "-"} disabled className="mt-1 bg-gray-50" />
                 </div>
               </div>
             </div>
@@ -207,7 +282,8 @@ const DetailLaporan = () => {
                 </Button>
               </div>
               <div className="bg-gray-100 rounded-lg p-4">
-                <p className="text-foreground">{laporan.laporan}</p>
+                <p className="font-medium text-sm text-muted-foreground mb-2">Jenis: {laporan.jenis_laporan}</p>
+                <p className="text-foreground">{laporan.deskripsi}</p>
               </div>
             </div>
           </CardContent>
@@ -229,14 +305,14 @@ const DetailLaporan = () => {
         >
           <ChevronLeft size={24} />
         </Button>
-        <h1 className="text-2xl font-semibold">Detail Data Mitra</h1>
+        <h1 className="text-2xl font-semibold">Detail Data {dilaporkanUser?.role === "mitra" ? "Mitra" : "Customer"}</h1>
       </div>
 
       {/* Laporan Section with Edit */}
       <Card>
         <CardContent className="p-6">
           <div className="flex items-center justify-between mb-4">
-            <h4 className="font-semibold text-lg">Laporan</h4>
+            <h4 className="font-semibold text-lg">Hasil Investigasi</h4>
             {!isEditing ? (
               <Button 
                 variant="outline" 
@@ -252,6 +328,7 @@ const DetailLaporan = () => {
               <Button 
                 className="bg-primary"
                 onClick={handleSaveLaporan}
+                disabled={updateLaporan.isPending}
               >
                 Simpan
               </Button>
@@ -263,9 +340,10 @@ const DetailLaporan = () => {
                 value={editedLaporan}
                 onChange={(e) => setEditedLaporan(e.target.value)}
                 className="min-h-[100px] bg-white"
+                placeholder="Tulis hasil investigasi..."
               />
             ) : (
-              <p className="text-foreground">{editedLaporan}</p>
+              <p className="text-foreground">{editedLaporan || laporan.hasil_investigasi || "Belum ada hasil investigasi"}</p>
             )}
           </div>
         </CardContent>
@@ -290,15 +368,15 @@ const DetailLaporan = () => {
         </CardContent>
       </Card>
 
-      {/* Mitra Profile Card */}
+      {/* Dilaporkan Profile Card */}
       <Card>
         <CardContent className="p-6">
           <div className="flex items-center gap-4 mb-6">
             <div className="relative">
               <div className="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center overflow-hidden">
                 <img
-                  src="/placeholder.svg"
-                  alt={laporan.namaMitra}
+                  src={dilaporkanUser?.foto_profil || "/placeholder.svg"}
+                  alt={dilaporkanUser?.nama || "User"}
                   className="w-full h-full object-cover"
                 />
               </div>
@@ -309,10 +387,12 @@ const DetailLaporan = () => {
               </div>
             </div>
             <div>
-              <h3 className="font-semibold text-xl">{laporan.namaMitra}</h3>
-              <p className="text-muted-foreground">Nebeng {laporan.mitraKendaraan}</p>
+              <h3 className="font-semibold text-xl">{dilaporkanUser?.nama || "-"}</h3>
+              <p className="text-muted-foreground">
+                {dilaporkanUser?.role === "mitra" ? `Nebeng ${kendaraan?.jenis_kendaraan || "Motor"}` : "Customer"}
+              </p>
               <div className="flex items-center gap-1 text-primary">
-                <span className="font-medium">{laporan.mitraId}</span>
+                <span className="font-medium">{dilaporkanUser?.id.slice(0, 8).toUpperCase()}</span>
                 <ExternalLink size={14} />
               </div>
             </div>
@@ -324,22 +404,22 @@ const DetailLaporan = () => {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="text-sm text-muted-foreground">Nama Lengkap</label>
-                <Input value={laporan.namaMitra} disabled className="mt-1 bg-gray-50" />
+                <Input value={dilaporkanUser?.nama || "-"} disabled className="mt-1 bg-gray-50" />
               </div>
               <div>
                 <label className="text-sm text-muted-foreground">Email</label>
-                <Input value={laporan.mitraEmail} disabled className="mt-1 bg-gray-50" />
+                <Input value={dilaporkanUser?.email || "-"} disabled className="mt-1 bg-gray-50" />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4 mt-4">
               <div>
                 <label className="text-sm text-muted-foreground">Tempat Lahir</label>
-                <Input value={laporan.mitraTempatLahir} disabled className="mt-1 bg-gray-50" />
+                <Input value={dilaporkanVerifikasi?.tempat_lahir || "-"} disabled className="mt-1 bg-gray-50" />
               </div>
               <div>
                 <label className="text-sm text-muted-foreground">Tanggal Lahir</label>
                 <div className="relative">
-                  <Input value={laporan.mitraTanggalLahir} disabled className="mt-1 bg-gray-50" />
+                  <Input value={formatDate(dilaporkanUser?.tanggal_lahir)} disabled className="mt-1 bg-gray-50" />
                   <svg className="absolute right-3 top-1/2 -translate-y-1/2 mt-0.5 w-4 h-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
@@ -350,7 +430,7 @@ const DetailLaporan = () => {
               <div>
                 <label className="text-sm text-muted-foreground">Jenis Kelamin</label>
                 <div className="relative">
-                  <Input value={laporan.mitraJenisKelamin} disabled className="mt-1 bg-gray-50" />
+                  <Input value={dilaporkanVerifikasi?.jenis_kelamin || "-"} disabled className="mt-1 bg-gray-50" />
                   <svg className="absolute right-3 top-1/2 -translate-y-1/2 mt-0.5 w-4 h-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
@@ -358,7 +438,7 @@ const DetailLaporan = () => {
               </div>
               <div>
                 <label className="text-sm text-muted-foreground">No. Tlp</label>
-                <Input value={laporan.mitraPhone} disabled className="mt-1 bg-gray-50" />
+                <Input value={dilaporkanUser?.no_hp || "-"} disabled className="mt-1 bg-gray-50" />
               </div>
             </div>
           </div>
@@ -366,7 +446,20 @@ const DetailLaporan = () => {
           {/* KTP Info */}
           <div className="mt-8">
             <h4 className="font-semibold text-lg mb-4">Informasi KTP</h4>
-            {/* Placeholder for KTP info */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm text-muted-foreground">No. KTP</label>
+                <Input value={dilaporkanVerifikasi?.no_ktp || "-"} disabled className="mt-1 bg-gray-50" />
+              </div>
+              <div>
+                <label className="text-sm text-muted-foreground">Nama di KTP</label>
+                <Input value={dilaporkanVerifikasi?.nama_ktp || "-"} disabled className="mt-1 bg-gray-50" />
+              </div>
+            </div>
+            <div className="mt-4">
+              <label className="text-sm text-muted-foreground">Alamat KTP</label>
+              <Input value={dilaporkanVerifikasi?.alamat_ktp || "-"} disabled className="mt-1 bg-gray-50" />
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -377,8 +470,8 @@ const DetailLaporan = () => {
         onOpenChange={setShowBlockConfirm}
         onConfirm={handleBlockConfirm}
         type="confirm"
-        mitraName={laporan.namaMitra}
-        customerName={laporan.namaCustomer}
+        mitraName={mitraUser?.nama || "Mitra"}
+        customerName={customerUser?.nama || "Customer"}
       />
       <BlockLaporanPopup
         open={showBlockSuccess}
