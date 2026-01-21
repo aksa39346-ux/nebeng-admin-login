@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
 export type UserRole = "customer" | "mitra";
-export type StatusType = "aktif" | "tidak aktif" | "blokir" | "proses";
+export type StatusType = "aktif" | "tidak aktif" | "blokir" | "proses" | "selesai" | "ditolak";
 
 export interface User {
   id: string;

@@ -493,7 +493,13 @@ export type Database = {
     Enums: {
       booking_status: "pending" | "confirmed" | "completed" | "cancelled"
       payment_status: "pending" | "completed" | "failed" | "refunded"
-      status_type: "aktif" | "tidak aktif" | "blokir" | "proses"
+      status_type:
+        | "aktif"
+        | "tidak aktif"
+        | "blokir"
+        | "proses"
+        | "selesai"
+        | "ditolak"
       user_role: "customer" | "mitra"
       verification_status: "pending" | "verified" | "rejected"
     }
@@ -625,7 +631,14 @@ export const Constants = {
     Enums: {
       booking_status: ["pending", "confirmed", "completed", "cancelled"],
       payment_status: ["pending", "completed", "failed", "refunded"],
-      status_type: ["aktif", "tidak aktif", "blokir", "proses"],
+      status_type: [
+        "aktif",
+        "tidak aktif",
+        "blokir",
+        "proses",
+        "selesai",
+        "ditolak",
+      ],
       user_role: ["customer", "mitra"],
       verification_status: ["pending", "verified", "rejected"],
     },
