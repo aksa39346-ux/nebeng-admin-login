@@ -1,20 +1,25 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ChevronLeft, Copy, ExternalLink } from "lucide-react";
+import { ChevronLeft, Copy, ExternalLink, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import BlockLaporanPopup from "@/components/BlockLaporanPopup";
 import SaveLaporanPopup from "@/components/SaveLaporanPopup";
 import { toast } from "sonner";
 import { useLaporanDetail, useUpdateLaporan } from "@/hooks/useLaporan";
-import { useUser, useUpdateUserStatus } from "@/hooks/useUsers";
+import { useUser, useUpdateUserStatus, StatusType } from "@/hooks/useUsers";
 import { useVerifikasiByUser } from "@/hooks/useVerifikasi";
 import { useBooking } from "@/hooks/useBookings";
 import { useKendaraanByMitra } from "@/hooks/useKendaraan";
-
 const DetailLaporan = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -133,6 +138,31 @@ const DetailLaporan = () => {
     });
   };
 
+  const getStatusConfig = (status: StatusType) => {
+    switch (status) {
+      case "selesai":
+        return { label: "Selesai", bgColor: "bg-green-100", textColor: "text-green-700" };
+      case "ditolak":
+        return { label: "Ditolak", bgColor: "bg-red-100", textColor: "text-red-700" };
+      default:
+        return { label: "Proses", bgColor: "bg-yellow-100", textColor: "text-yellow-700" };
+    }
+  };
+
+  const handleStatusChange = (newStatus: StatusType) => {
+    if (!laporan?.id) return;
+    
+    updateLaporan.mutate(
+      { id: laporan.id, status: newStatus },
+      {
+        onSuccess: () => {
+          toast.success(`Status laporan berhasil diubah ke ${getStatusConfig(newStatus).label}`);
+        }
+      }
+    );
+  };
+
+  const statusConfig = getStatusConfig(laporan.status);
   // Detail Laporan View
   if (!showMitraDetail) {
     return (
@@ -150,9 +180,47 @@ const DetailLaporan = () => {
           <h1 className="text-2xl font-semibold">Detail Laporan</h1>
         </div>
 
-        {/* ID Pesanan */}
+        {/* Status & ID Pesanan */}
         <Card>
           <CardContent className="p-6">
+            {/* Status Section */}
+            <div className="flex items-center justify-between mb-6">
+              <span className="text-lg font-medium">Status Laporan:</span>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    className={`${statusConfig.bgColor} ${statusConfig.textColor} hover:${statusConfig.bgColor} gap-2 font-medium`}
+                    disabled={updateLaporan.isPending}
+                  >
+                    {statusConfig.label}
+                    <ChevronDown size={16} />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem 
+                    onClick={() => handleStatusChange("proses")}
+                    className="text-yellow-700"
+                  >
+                    Proses
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={() => handleStatusChange("selesai")}
+                    className="text-green-700"
+                  >
+                    Selesai
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={() => handleStatusChange("ditolak")}
+                    className="text-red-700"
+                  >
+                    Ditolak
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+
+            {/* ID Pesanan */}
             <div className="flex items-center justify-between">
               <span className="text-lg font-medium">ID Pesanan :</span>
               <div className="flex items-center gap-2">
@@ -171,7 +239,6 @@ const DetailLaporan = () => {
                 )}
               </div>
             </div>
-
             {/* Customer and Mitra Info */}
             <div className="grid grid-cols-2 gap-8 mt-8">
               {/* Customer */}
