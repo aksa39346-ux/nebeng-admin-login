@@ -26,10 +26,11 @@ const Laporan = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [entriesPerPage, setEntriesPerPage] = useState("10");
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+  const [selectedStatus, setSelectedStatus] = useState<string>("all");
 
   const laporanList = laporanData || [];
 
-  // Filter data based on search and date
+  // Filter data based on search, date, and status
   const filteredData = useMemo(() => {
     return laporanList.filter((laporan) => {
       const pelaporName = laporan.pelapor?.nama || "";
@@ -46,9 +47,11 @@ const Laporan = () => {
          laporanDate.getMonth() === selectedDate.getMonth() &&
          laporanDate.getDate() === selectedDate.getDate());
 
-      return matchesSearch && matchesDate;
+      const matchesStatus = selectedStatus === "all" || laporan.status === selectedStatus;
+
+      return matchesSearch && matchesDate && matchesStatus;
     });
-  }, [laporanList, searchQuery, selectedDate]);
+  }, [laporanList, searchQuery, selectedDate, selectedStatus]);
 
   // Pagination
   const itemsPerPage = parseInt(entriesPerPage);
@@ -67,6 +70,22 @@ const Laporan = () => {
   const handleDateChange = (date: Date | undefined) => {
     setSelectedDate(date);
     setCurrentPage(1);
+  };
+
+  const handleStatusChange = (status: string) => {
+    setSelectedStatus(status);
+    setCurrentPage(1);
+  };
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case "selesai":
+        return <span className="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-700">Selesai</span>;
+      case "ditolak":
+        return <span className="px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-700">Ditolak</span>;
+      default:
+        return <span className="px-2 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-700">Proses</span>;
+    }
   };
 
   // Download Excel function
@@ -146,6 +165,19 @@ const Laporan = () => {
               />
             </div>
             <div className="flex items-center gap-3">
+              {/* Status Filter */}
+              <Select value={selectedStatus} onValueChange={handleStatusChange}>
+                <SelectTrigger className={cn("w-32 h-10", selectedStatus !== "all" && "text-primary border-primary")}>
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent className="bg-background border shadow-md z-50">
+                  <SelectItem value="all">Semua Status</SelectItem>
+                  <SelectItem value="proses">Proses</SelectItem>
+                  <SelectItem value="selesai">Selesai</SelectItem>
+                  <SelectItem value="ditolak">Ditolak</SelectItem>
+                </SelectContent>
+              </Select>
+              
               <Popover>
                 <PopoverTrigger asChild>
                   <Button variant="outline" className={cn("gap-2", selectedDate && "text-primary border-primary")}>
@@ -153,7 +185,7 @@ const Laporan = () => {
                     {selectedDate ? format(selectedDate, "dd MMM yyyy", { locale: localeId }) : "Kalender"}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="end">
+                <PopoverContent className="w-auto p-0 bg-background border shadow-md z-50" align="end">
                   <Calendar
                     mode="single"
                     selected={selectedDate}
@@ -191,6 +223,7 @@ const Laporan = () => {
                   <th className="text-left py-3 px-4 font-medium">NAMA PELAPOR</th>
                   <th className="text-left py-3 px-4 font-medium">TANGGAL</th>
                   <th className="text-left py-3 px-4 font-medium">JENIS LAPORAN</th>
+                  <th className="text-left py-3 px-4 font-medium">STATUS</th>
                   <th className="text-left py-3 px-4 font-medium">DESKRIPSI</th>
                   <th className="text-center py-3 px-4 font-medium rounded-tr-lg">AKSI</th>
                 </tr>
@@ -205,6 +238,7 @@ const Laporan = () => {
                         {format(new Date(laporan.created_at), "EEEE, dd MMM yyyy", { locale: localeId })}
                       </td>
                       <td className="py-4 px-4">{laporan.jenis_laporan}</td>
+                      <td className="py-4 px-4">{getStatusBadge(laporan.status)}</td>
                       <td className="py-4 px-4 max-w-xs truncate">{laporan.deskripsi}</td>
                       <td className="py-4 px-4">
                         <div className="flex items-center justify-center">
@@ -222,7 +256,7 @@ const Laporan = () => {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={6} className="py-8 text-center text-muted-foreground">
+                    <td colSpan={7} className="py-8 text-center text-muted-foreground">
                       Tidak ada data yang ditemukan
                     </td>
                   </tr>
